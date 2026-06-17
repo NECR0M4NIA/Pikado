@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>Pikado — labo argentique</title>
+<style>
+  :root {
+    --bg: #1c1814;
+    --panel: #241f18;
+    --panel-raised: #2c251c;
+    --ink: #ece3d3;
+    --ink-dim: #9c9180;
+    --safelight: #c2452b;
+    --safelight-dim: #7a3526;
+    --teal: #4f7268;
+    --border: #3a3226;
+    --mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, monospace;
+    --sans: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ---------- en-tête ---------- */
+  header {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  header .logo {
+    font-family: var(--mono);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    font-size: 14px;
+  }
+  header .logo span { color: var(--safelight); }
+  header .tagline {
+    font-size: 12px;
+    color: var(--ink-dim);
+    font-family: var(--mono);
+  }
+
+  /* ---------- corps : aperçu + panneau de réglages ---------- */
+  main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    min-height: 0;
+  }
+
+  .stage {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(ellipse at center, rgba(255,255,255,0.03), transparent 70%),
+      var(--bg);
+    padding: 24px;
+  }
+
+  .dropzone {
+    width: 100%;
+    height: 100%;
+    border: 1px dashed var(--border);
+    border-radius: 2px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .dropzone:hover, .dropzone.drag-over {
+    border-color: var(--safelight-dim);
+    background: rgba(194, 69, 43, 0.04);
+  }
+  .dropzone .icon { font-size: 13px; font-family: var(--mono); color: var(--ink-dim); letter-spacing: 0.08em; }
+  .dropzone .hint { font-size: 12px; color: var(--ink-dim); }
+
+  .preview-wrap {
+    width: 100%;
+    height: 100%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .preview-wrap.active { display: flex; }
+  .preview-wrap img, .preview-wrap video {
+    max-width: 100%;
+    max-height: 100%;
+    box-shadow: 0 0 0 1px var(--border), 0 20px 50px rgba(0,0,0,0.5);
+  }
+
+  .swap-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-dim);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+  }
+  .swap-btn:hover { color: var(--ink); border-color: var(--ink-dim); }
+
+  /* ---------- panneau de réglages ---------- */
+  aside {
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 18px 18px 90px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .field-group label.section {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  select, input[type="text"] {
+    width: 100%;
+    background: var(--panel-raised);
+    border: 1px solid var(--border);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 13px;
+    padding: 8px 10px;
+    border-radius: 2px;
+  }
+
+  .color-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .color-row .arrow { color: var(--ink-dim); font-family: var(--mono); }
+  .color-row label {
+    font-size: 12px;
+    color: var(--ink-dim);
+    display: block;
+    margin-bottom: 4px;
+  }
+  input[type="color"] {
+    width: 44px;
+    height: 32px;
+    border: 1px solid var(--border);
+    background: none;
+    border-radius: 2px;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .slider-row { margin-top: 12px; }
+  .slider-row .slider-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--ink-dim);
+    margin-bottom: 6px;
+    font-family: var(--mono);
+  }
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--teal);
+  }
+
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--ink-dim);
+  }
+  .checkbox-row input { accent-color: var(--teal); }
+
+  .divider { border-top: 1px solid var(--border); margin: 0; }
+
+  .export-btn {
+    width: 100%;
+    background: var(--safelight);
+    color: #1c1814;
+    border: none;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    padding: 12px;
+    border-radius: 2px;
+    cursor: pointer;
+    text-transform: uppercase;
+  }
+  .export-btn:hover { background: #d6502f; }
+  .export-btn:disabled { background: var(--safelight-dim); color: var(--ink-dim); cursor: not-allowed; }
+
+  /* ---------- bandeau pellicule (signature + progression) ---------- */
+  .filmstrip {
+    position: relative;
+    height: 46px;
+    background: #0f0d0a;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .filmstrip .sprockets {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 6px;
+  }
+  .filmstrip .sprockets::before,
+  .filmstrip .sprockets::after { content: none; }
+  .sprocket-row {
+    position: absolute;
+    top: 6px;
+    left: 0;
+    right: 0;
+    height: 6px;
+    display: flex;
+    gap: 14px;
+    padding: 0 10px;
+  }
+  .sprocket-row.bottom { top: auto; bottom: 6px; }
+  .sprocket-row span {
+    width: 6px;
+    height: 6px;
+    background: var(--border);
+    border-radius: 1px;
+    flex-shrink: 0;
+  }
+  .filmstrip-fill {
+    position: absolute;
+    top: 0; bottom: 0; left: 0;
+    width: 0%;
+    background: linear-gradient(90deg, var(--safelight-dim), var(--safelight));
+    transition: width 0.25s ease;
+    opacity: 0.35;
+  }
+  .filmstrip-status {
+    position: relative;
+    z-index: 2;
+    margin: 0 auto;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+  }
+  .filmstrip-status.active { color: var(--ink); }
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">PIKAD<span>O</span></div>
+  <div class="tagline">// labo argentique — grain &amp; teinte</div>
+</header>
+
+<main>
+  <div class="stage">
+    <div class="dropzone" id="dropzone">
+      <div class="icon">[ AUCUNE PELLICULE CHARGÉE ]</div>
+      <div class="hint">Clique ou glisse une photo / vidéo ici</div>
+    </div>
+    <div class="preview-wrap" id="previewWrap">
+      <img id="previewImg" style="display:none" />
+      <video id="previewVideo" style="display:none" controls></video>
+      <button class="swap-btn" id="changeFileBtn">CHANGER DE FICHIER</button>
+    </div>
+  </div>
+
+  <aside>
+    <div class="field-group">
+      <label class="section">Recette</label>
+      <select id="recipeSelect">
+        <option value="custom">— Réglage manuel —</option>
+        <option value="rougeBleu">Rouge sanglant → Bleu marine</option>
+        <option value="oliveBordeaux">Vert olive → Bordeaux</option>
+        <option value="sepiaDoux">Sépia doux</option>
+      </select>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="field-group">
+      <label class="section">Teinte ciblée</label>
+      <div class="color-row">
+        <div>
+          <label>Couleur cible</label>
+          <input type="color" id="targetColor" value="#8b0000" />
+        </div>
+        <div class="arrow">→</div>
+        <div>
+          <label>Remplacement</label>
+          <input type="color" id="replacementColor" value="#000080" />
+        </div>
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-label"><span>Plage de teinte</span><span id="hueRangeVal">15°</span></div>
+        <input type="range" id="hueRange" min="2" max="60" value="15" />
+      </div>
+      <div class="slider-row">
+        <div class="slider-label"><span>Dégradé des bords</span><span id="featherVal">8°</span></div>
+        <input type="range" id="feather" min="0" max="40" value="8" />
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="field-group">
+      <label class="section">Grain</label>
+      <div class="slider-row">
+        <div class="slider-label"><span>Intensité</span><span id="grainIntensityVal">18</span></div>
+        <input type="range" id="grainIntensity" min="0" max="60" value="18" />
+      </div>
+      <div class="slider-row">
+        <div class="slider-label"><span>Taille du grain</span><span id="grainSizeVal">1px</span></div>
+        <input type="range" id="grainSize" min="1" max="4" value="1" />
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="grainMono" checked />
+        <label for="grainMono">Grain monochrome (look pellicule classique)</label>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <button class="export-btn" id="exportBtn" disabled>Exporter</button>
+  </aside>
+</main>
+
+<div class="filmstrip">
+  <div class="filmstrip-fill" id="filmstripFill"></div>
+  <div class="sprocket-row" id="sprocketTop"></div>
+  <div class="filmstrip-status" id="status">Aucun fichier — chargez une photo ou une vidéo</div>
+  <div class="sprocket-row bottom" id="sprocketBottom"></div>
+</div>
+
+<script>
+  // ---- génère les perforations de la pellicule (décor) ----
+  function fillSprockets(el, count) {
+    el.innerHTML = '';
+    for (let i = 0; i < count; i++) {
+      const s = document.createElement('span');
+      el.appendChild(s);
+    }
+  }
+  fillSprockets(document.getElementById('sprocketTop'), 40);
+  fillSprockets(document.getElementById('sprocketBottom'), 40);
+
+  // ---- état ----
+  let currentFilePath = null;
+  let currentFileType = null; // 'image' | 'video'
+
+  const dropzone = document.getElementById('dropzone');
+  const previewWrap = document.getElementById('previewWrap');
+  const previewImg = document.getElementById('previewImg');
+  const previewVideo = document.getElementById('previewVideo');
+  const changeFileBtn = document.getElementById('changeFileBtn');
+  const exportBtn = document.getElementById('exportBtn');
+  const statusEl = document.getElementById('status');
+  const fillEl = document.getElementById('filmstripFill');
+
+  const IMAGE_EXT = ['.jpg', '.jpeg', '.png', '.webp', '.tiff'];
+  const VIDEO_EXT = ['.mp4', '.mov', '.mkv', '.avi', '.webm'];
+
+  function guessType(filePath) {
+    const ext = filePath.slice(filePath.lastIndexOf('.')).toLowerCase();
+    if (IMAGE_EXT.includes(ext)) return 'image';
+    if (VIDEO_EXT.includes(ext)) return 'video';
+    return null;
+  }
+
+  function setStatus(text, active = false) {
+    statusEl.textContent = text;
+    statusEl.classList.toggle('active', active);
+  }
+
+  function loadFile(filePath) {
+    const type = guessType(filePath);
+    if (!type) {
+      setStatus('Format non reconnu — choisis une image ou une vidéo');
+      return;
+    }
+    currentFilePath = filePath;
+    currentFileType = type;
+
+    dropzone.style.display = 'none';
+    previewWrap.classList.add('active');
+    const fileUrl = 'file://' + filePath.replace(/\\/g, '/');
+
+    if (type === 'image') {
+      previewVideo.style.display = 'none';
+      previewImg.style.display = 'block';
+      previewImg.src = fileUrl;
+    } else {
+      previewImg.style.display = 'none';
+      previewVideo.style.display = 'block';
+      previewVideo.src = fileUrl;
+    }
+
+    exportBtn.disabled = false;
+    setStatus(`Chargé : ${filePath.split(/[\\/]/).pop()}`);
+  }
+
+  // ---- ouverture via la boîte de dialogue native (la méthode la plus fiable) ----
+  async function pickFile() {
+    const filePath = await window.filmLook.selectFile();
+    if (filePath) loadFile(filePath);
+  }
+  dropzone.addEventListener('click', pickFile);
+  changeFileBtn.addEventListener('click', pickFile);
+
+  // ---- glisser-déposer ----
+  ['dragover', 'dragleave', 'drop'].forEach(evt => {
+    dropzone.addEventListener(evt, (e) => e.preventDefault());
+  });
+  dropzone.addEventListener('dragover', () => dropzone.classList.add('drag-over'));
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+  dropzone.addEventListener('drop', (e) => {
+    dropzone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    // Electron 32+ : le chemin réel d'un File ne passe plus par .path,
+    // il faut webUtils.getPathForFile (exposé via preload).
+    const filePath = window.filmLook.getPathForFile(file);
+    if (filePath) loadFile(filePath);
+  });
+
+  // ---- recettes prédéfinies ----
+  const RECIPES = {
+    rougeBleu:     { target: '#8b0000', replacement: '#000080', hueRange: 15, feather: 8, grainIntensity: 18, grainSize: 1, grainMono: true },
+    oliveBordeaux: { target: '#808000', replacement: '#660015', hueRange: 18, feather: 10, grainIntensity: 22, grainSize: 1, grainMono: true },
+    sepiaDoux:     { target: '#ffffff', replacement: '#70421a', hueRange: 40, feather: 20, grainIntensity: 12, grainSize: 1, grainMono: true },
+  };
+
+  document.getElementById('recipeSelect').addEventListener('change', (e) => {
+    const recipe = RECIPES[e.target.value];
+    if (!recipe) return;
+    document.getElementById('targetColor').value = recipe.target;
+    document.getElementById('replacementColor').value = recipe.replacement;
+    document.getElementById('hueRange').value = recipe.hueRange;
+    document.getElementById('feather').value = recipe.feather;
+    document.getElementById('grainIntensity').value = recipe.grainIntensity;
+    document.getElementById('grainSize').value = recipe.grainSize;
+    document.getElementById('grainMono').checked = recipe.grainMono;
+    syncSliderLabels();
+  });
+
+  // ---- affichage live des valeurs de sliders ----
+  function syncSliderLabels() {
+    document.getElementById('hueRangeVal').textContent = document.getElementById('hueRange').value + '°';
+    document.getElementById('featherVal').textContent = document.getElementById('feather').value + '°';
+    document.getElementById('grainIntensityVal').textContent = document.getElementById('grainIntensity').value;
+    document.getElementById('grainSizeVal').textContent = document.getElementById('grainSize').value + 'px';
+  }
+  ['hueRange', 'feather', 'grainIntensity', 'grainSize'].forEach(id => {
+    document.getElementById(id).addEventListener('input', syncSliderLabels);
+  });
+
+  function hexToRgb(hex) {
+    const v = parseInt(hex.slice(1), 16);
+    return { r: (v >> 16) & 255, g: (v >> 8) & 255, b: v & 255 };
+  }
+
+  function buildOptions() {
+    return {
+      colorSwaps: [{
+        target: hexToRgb(document.getElementById('targetColor').value),
+        replacement: hexToRgb(document.getElementById('replacementColor').value),
+        options: {
+          hueRange: Number(document.getElementById('hueRange').value),
+          feather: Number(document.getElementById('feather').value),
+        },
+      }],
+      grain: {
+        intensity: Number(document.getElementById('grainIntensity').value),
+        size: Number(document.getElementById('grainSize').value),
+        monochrome: document.getElementById('grainMono').checked,
+      },
+    };
+  }
+
+  function buildOutputPath(inputPath) {
+    const dot = inputPath.lastIndexOf('.');
+    return inputPath.slice(0, dot) + '-argentique' + inputPath.slice(dot);
+  }
+
+  // ---- progression vidéo (alimente le bandeau pellicule) ----
+  window.filmLook.onVideoProgress((progress) => {
+    const stageLabels = {
+      analyse: 'Analyse de la vidéo…',
+      extraction: 'Extraction des frames…',
+      traitement: progress.total
+        ? `Traitement des frames… ${progress.current}/${progress.total}`
+        : 'Traitement des frames…',
+      assemblage: 'Réassemblage de la vidéo…',
+      'terminé': 'Export terminé ✓',
+    };
+    setStatus(stageLabels[progress.stage] || progress.stage, true);
+    if (progress.stage === 'traitement' && progress.total) {
+      fillEl.style.width = `${(progress.current / progress.total) * 100}%`;
+    } else if (progress.stage === 'terminé') {
+      fillEl.style.width = '100%';
+    }
+  });
+
+  // ---- export ----
+  exportBtn.addEventListener('click', async () => {
+    if (!currentFilePath) return;
+    exportBtn.disabled = true;
+    fillEl.style.width = '0%';
+    const outputPath = buildOutputPath(currentFilePath);
+    const options = buildOptions();
+
+    try {
+      if (currentFileType === 'image') {
+        setStatus('Traitement de l\'image…', true);
+        fillEl.style.width = '60%';
+        await window.filmLook.processImage({ inputPath: currentFilePath, outputPath, options });
+        fillEl.style.width = '100%';
+        setStatus('Export terminé ✓ — ' + outputPath, true);
+      } else {
+        await window.filmLook.processVideo({ inputPath: currentFilePath, outputPath, options });
+      }
+    } catch (err) {
+      setStatus('Erreur : ' + err.message, true);
+      console.error(err);
+    } finally {
+      exportBtn.disabled = false;
+    }
+  });
+
+  syncSliderLabels();
+</script>
+</body>
+</html>
