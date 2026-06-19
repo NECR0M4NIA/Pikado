@@ -280,12 +280,113 @@ function applyLevels(data, width, height, options = {}) {
 }
 
 /* ------------------------------------------------------------------ */
-/* 5. PIPELINE CENTRAL                                                  */
+/* 5. NETTETÉ AVANCÉE — UNSHARP MASK                                   */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Génère un noyau gaussien 1D normalisé de rayon `radius` et d'écart-type `sigma`.
+ * On fait la convolution séparable (horizontale puis verticale) pour éviter
+ * une complexité O(n * radius²) — c'est O(n * radius * 2), beaucoup plus rapide.
+ */
+function gaussianKernel1D(radius, sigma) {
+  const size = 2 * radius + 1;
+  const kernel = new Float32Array(size);
+  let sum = 0;
+  for (let i = 0; i < size; i++) {
+    const x = i - radius;
+    kernel[i] = Math.exp(-(x * x) / (2 * sigma * sigma));
+    sum += kernel[i];
+  }
+  for (let i = 0; i < size; i++) kernel[i] /= sum;
+  return kernel;
+}
+
+/**
+ * Applique un flou gaussien 1D sur un seul canal (convolution horizontale OU verticale).
+ * @param {Float32Array} src  canal source (valeurs 0-255)
+ * @param {Float32Array} dst  canal destination
+ * @param {number} w / h     dimensions image
+ * @param {Float32Array} k   noyau 1D
+ * @param {boolean} vertical true = convolution verticale, false = horizontale
+ */
+function convolve1D(src, dst, w, h, k, vertical) {
+  const r = (k.length - 1) / 2;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      let acc = 0;
+      for (let ki = 0; ki < k.length; ki++) {
+        const offset = ki - r;
+        let sx = x, sy = y;
+        if (vertical) sy = Math.min(h - 1, Math.max(0, y + offset));
+        else sx = Math.min(w - 1, Math.max(0, x + offset));
+        acc += src[sy * w + sx] * k[ki];
+      }
+      dst[y * w + x] = acc;
+    }
+  }
+}
+
+/**
+ * Netteté avancée — Unsharp Mask.
+ *
+ * Principe : on crée une version floue de l'image, on soustrait le flou de
+ * l'original pour obtenir le "masque de détails", puis on l'ajoute à l'image
+ * avec une intensité `amount`. Un seuil `threshold` évite d'amplifier le bruit
+ * dans les zones uniformes.
+ *
+ * @param {object} options
+ * @param {number} options.radius     rayon du flou gaussien, 1-20 (défaut 2)
+ *                                    contrôle la taille des détails affectés :
+ *                                    petit = détails fins, grand = contours larges
+ * @param {number} options.sigma      écart-type du gaussien, 0.1-10 (défaut 1.0)
+ *                                    contrôle le "lissé" du flou — en général sigma ≈ radius/2
+ * @param {number} options.amount     intensité du sharpening, 0-300% (défaut 100)
+ *                                    100 = ajoute le masque de détails tel quel
+ * @param {number} options.threshold  seuil de différence min (0-255) pour qu'un pixel
+ *                                    soit affecté (défaut 0). Mettre 8-15 pour ne pas
+ *                                    amplifier le bruit dans les aplats.
+ */
+function applySharpen(data, width, height, options = {}) {
+  const {
+    radius = 2,
+    sigma = 1.0,
+    amount = 100,
+    threshold = 0,
+  } = options;
+
+  const r = Math.max(1, Math.round(radius));
+  const amountF = amount / 100;
+  const kernel = gaussianKernel1D(r, sigma);
+  const n = width * height;
+
+  // on travaille canal par canal pour rester simple
+  for (let c = 0; c < 3; c++) {
+    const channel = new Float32Array(n);
+    for (let i = 0; i < n; i++) channel[i] = data[i * 4 + c];
+
+    const blurH = new Float32Array(n);
+    const blurred = new Float32Array(n);
+    convolve1D(channel, blurH, width, height, kernel, false);  // horizontal
+    convolve1D(blurH, blurred, width, height, kernel, true);   // vertical
+
+    for (let i = 0; i < n; i++) {
+      const orig = channel[i];
+      const blur = blurred[i];
+      const diff = orig - blur; // masque de détails
+      if (Math.abs(diff) >= threshold) {
+        data[i * 4 + c] = clamp(orig + diff * amountF);
+      }
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* 6. PIPELINE CENTRAL                                                  */
 /* ------------------------------------------------------------------ */
 
 /**
  * Applique tous les filtres activés, dans un ordre cohérent :
- * exposition -> niveaux -> contraste -> saturation -> teinte sélective -> grain.
+ * exposition -> niveaux -> contraste -> saturation -> netteté -> teinte sélective -> grain.
  * Chaque filtre est indépendant : s'il est absent ou `enabled: false`, on le saute.
  * C'est la fonction unique utilisée par l'aperçu live, l'export image et l'export vidéo,
  * pour garantir un résultat identique entre les trois.
@@ -295,16 +396,18 @@ function applyLevels(data, width, height, options = {}) {
  * @param {object} [settings.levels]      { enabled, inputBlack, inputWhite, gamma, outputBlack, outputWhite }
  * @param {object} [settings.contrast]    { enabled, amount }
  * @param {object} [settings.saturation]  { enabled, amount }
+ * @param {object} [settings.sharpen]     { enabled, radius, sigma, amount, threshold }
  * @param {object} [settings.colorSwaps]  { enabled, swaps: [{ target, replacement, options }] }
  * @param {object} [settings.grain]       { enabled, intensity, monochrome, size }
  */
 function applyPipeline(data, width, height, settings = {}) {
-  const { exposure, levels, contrast, saturation, colorSwaps, grain } = settings;
+  const { exposure, levels, contrast, saturation, sharpen, colorSwaps, grain } = settings;
 
-  if (exposure?.enabled) adjustExposure(data, width, height, exposure.stops ?? 0);
-  if (levels?.enabled) applyLevels(data, width, height, levels);
-  if (contrast?.enabled) adjustContrast(data, width, height, contrast.amount ?? 0);
+  if (exposure?.enabled)   adjustExposure(data, width, height, exposure.stops ?? 0);
+  if (levels?.enabled)     applyLevels(data, width, height, levels);
+  if (contrast?.enabled)   adjustContrast(data, width, height, contrast.amount ?? 0);
   if (saturation?.enabled) adjustSaturation(data, width, height, saturation.amount ?? 0);
+  if (sharpen?.enabled)    applySharpen(data, width, height, sharpen);
 
   if (colorSwaps?.enabled && Array.isArray(colorSwaps.swaps)) {
     for (const swap of colorSwaps.swaps) {
@@ -324,6 +427,7 @@ module.exports = {
   adjustContrast,
   adjustSaturation,
   applyLevels,
+  applySharpen,
   applyPipeline,
   rgbToHsl,
   hslToRgb,

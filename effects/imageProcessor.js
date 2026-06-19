@@ -1,37 +1,40 @@
-/**
- * imageProcessor.js
- * ------------------
- * Pipeline de traitement pour une image fixe.
- * Utilise `sharp` pour décoder n'importe quel format (jpg, png, webp, tiff...)
- * en buffer RGBA brut, applique les effets de effects.js, puis réencode.
- *
- * Installation : npm install sharp
- */
-
 const sharp = require('sharp');
+const path  = require('path');
 const { applyPipeline } = require('./effects');
 
+// formats sharp supportés et leurs options par défaut
+const FORMAT_OPTIONS = {
+  jpg:  (s) => s.jpeg({ quality: 92, mozjpeg: true }),
+  jpeg: (s) => s.jpeg({ quality: 92, mozjpeg: true }),
+  png:  (s) => s.png({ compressionLevel: 8 }),
+  webp: (s) => s.webp({ quality: 88, effort: 4 }),
+  avif: (s) => s.avif({ quality: 80, effort: 4 }),
+  heif: (s) => s.heif({ quality: 85 }),
+  tiff: (s) => s.tiff({ compression: 'lzw' }),
+};
+
 /**
- * @param {string} inputPath   chemin du fichier image source
- * @param {string} outputPath  chemin du fichier de sortie (l'extension détermine le format)
- * @param {object} settings    voir applyPipeline dans effects.js (exposure, levels, contrast,
- *                              saturation, colorSwaps, grain — chacun avec son flag `enabled`)
+ * @param {string} inputPath
+ * @param {string} outputPath
+ * @param {object} settings   voir applyPipeline dans effects.js
+ * @param {string} [format]   'jpg' | 'png' | 'webp' | 'avif' | 'heif' | 'tiff'
+ *                             si omis, déduit de l'extension de outputPath
  */
-async function processImage(inputPath, outputPath, settings = {}) {
-  const image = sharp(inputPath);
-  const { data, info } = await image
-    .ensureAlpha() // garantit 4 canaux RGBA même pour un JPEG sans alpha
+async function processImage(inputPath, outputPath, settings = {}, format) {
+  const { data, info } = await sharp(inputPath)
+    .ensureAlpha()
     .raw()
     .toBuffer({ resolveWithObject: true });
 
-  const { width, height } = info;
+  applyPipeline(data, info.width, info.height, settings);
 
-  applyPipeline(data, width, height, settings);
+  const fmt = (format || path.extname(outputPath).slice(1) || 'jpg').toLowerCase();
+  const applyFormat = FORMAT_OPTIONS[fmt] ?? FORMAT_OPTIONS['jpg'];
 
-  await sharp(data, { raw: { width, height, channels: 4 } })
-    .toFile(outputPath);
+  const base = sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } });
+  await applyFormat(base).toFile(outputPath);
 
-  return { width, height, outputPath };
+  return { width: info.width, height: info.height, outputPath, format: fmt };
 }
 
 module.exports = { processImage };
