@@ -127,8 +127,8 @@ ipcMain.handle('process-image', async (event, { inputPath, outputPath, format, o
   return processImage(inputPath, outputPath, options, format);
 });
 
-ipcMain.handle('process-video', async (event, { inputPath, outputPath, options }) => {
-  return processVideo(inputPath, outputPath, options, (progress) => {
+ipcMain.handle('process-video', async (event, { inputPath, outputPath, options, videoSettings, range }) => {
+  return processVideo(inputPath, outputPath, options, videoSettings || {}, range || {}, (progress) => {
     event.sender.send('video-progress', progress);
   });
 });
