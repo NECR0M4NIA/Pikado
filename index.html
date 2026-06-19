@@ -34,55 +34,92 @@
       overflow: hidden;
     }
 
-    /* ---------- en-tête ---------- */
+    /* ---- header ---- */
     header {
       display: flex;
-      align-items: baseline;
+      align-items: center;
       gap: 10px;
-      padding: 14px 20px;
+      padding: 10px 16px;
       border-bottom: 1px solid var(--border);
       flex-shrink: 0;
     }
 
-    header .logo {
+    .logo {
       font-family: var(--mono);
       font-weight: 700;
-      letter-spacing: 0.12em;
-      font-size: 14px;
+      letter-spacing: .12em;
+      font-size: 13px;
     }
 
-    header .logo span {
+    .logo span {
       color: var(--safelight);
     }
 
-    header .tagline {
-      font-size: 12px;
+    .tagline {
+      font-size: 11px;
       color: var(--ink-dim);
       font-family: var(--mono);
+      flex: 1;
     }
 
-    /* ---------- corps : aperçu + panneau de réglages ---------- */
+    /* boutons header */
+    .header-actions {
+      display: flex;
+      gap: 6px;
+      margin-left: auto;
+    }
+
+    .hbtn {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: 5px 9px;
+      background: var(--panel-raised);
+      border: 1px solid var(--border);
+      color: var(--ink-dim);
+      cursor: pointer;
+      border-radius: 2px;
+      transition: color .12s, border-color .12s;
+      white-space: nowrap;
+    }
+
+    .hbtn:hover {
+      color: var(--ink);
+      border-color: var(--ink-dim);
+    }
+
+    .hbtn:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+    }
+
+    .hbtn.danger:hover {
+      color: var(--safelight);
+      border-color: var(--safelight);
+    }
+
+    /* ---- layout ---- */
     main {
       flex: 1;
       display: grid;
-      grid-template-columns: 1fr 320px;
+      grid-template-columns: 1fr 300px;
       min-height: 0;
     }
 
+    /* ---- zone aperçu ---- */
     .stage {
       position: relative;
+      overflow: hidden;
+      background: radial-gradient(ellipse at center, rgba(255, 255, 255, .03), transparent 70%), var(--bg);
       display: flex;
       align-items: center;
       justify-content: center;
-      background:
-        radial-gradient(ellipse at center, rgba(255, 255, 255, 0.03), transparent 70%),
-        var(--bg);
-      padding: 24px;
     }
 
     .dropzone {
-      width: 100%;
-      height: 100%;
+      position: absolute;
+      inset: 20px;
       border: 1px dashed var(--border);
       border-radius: 2px;
       display: flex;
@@ -91,20 +128,20 @@
       justify-content: center;
       gap: 14px;
       cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
+      transition: border-color .15s, background .15s;
     }
 
     .dropzone:hover,
     .dropzone.drag-over {
       border-color: var(--safelight-dim);
-      background: rgba(194, 69, 43, 0.04);
+      background: rgba(194, 69, 43, .04);
     }
 
     .dropzone .icon {
       font-size: 13px;
       font-family: var(--mono);
       color: var(--ink-dim);
-      letter-spacing: 0.08em;
+      letter-spacing: .08em;
     }
 
     .dropzone .hint {
@@ -113,53 +150,82 @@
     }
 
     .preview-wrap {
-      width: 100%;
-      height: 100%;
+      position: absolute;
+      inset: 0;
       display: none;
-      align-items: center;
-      justify-content: center;
       overflow: hidden;
-      position: relative;
     }
 
     .preview-wrap.active {
+      display: block;
+    }
+
+    #previewCanvas {
+      position: absolute;
+      /* Le centrage et le zoom/pan sont gérés intégralement par JS via transform.
+       transform-origin center center + translate(-50%,-50%) dans la valeur
+       permet un calcul de zoom vers le curseur simple et correct. */
+      top: 50%;
+      left: 50%;
+      transform-origin: center center;
+      transform: translate(-50%, -50%);
+      image-rendering: pixelated;
+      box-shadow: 0 0 0 1px var(--border), 0 12px 40px rgba(0, 0, 0, .6);
+      cursor: grab;
+      will-change: transform;
+    }
+
+    #previewCanvas.grabbing {
+      cursor: grabbing;
+    }
+
+    #previewVideo {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    /* contrôles flottants sur la zone aperçu */
+    .stage-controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      display: none;
+      align-items: center;
+      gap: 6px;
+      z-index: 20;
+      pointer-events: none;
+    }
+
+    .preview-wrap.active~.stage-controls {
       display: flex;
     }
 
-    .preview-wrap canvas,
-    .preview-wrap video {
-      max-width: 100%;
-      max-height: 100%;
-      box-shadow: 0 0 0 1px var(--border), 0 20px 50px rgba(0, 0, 0, 0.5);
+    .stage-controls>* {
+      pointer-events: auto;
     }
 
-    .preview-wrap canvas {
-      transform-origin: center center;
-      /* Ou laisse par défaut */
-      transition: transform 0.05s ease-out;
-      /* Optionnel : fluidifie le mouvement */
-      cursor: default;
-    }
-
-    .swap-btn {
-      position: absolute;
-      top: 16px;
-      right: 16px;
+    .zoom-indicator {
       font-family: var(--mono);
-      font-size: 11px;
+      font-size: 10px;
       color: var(--ink-dim);
-      background: var(--panel);
-      border: 1px solid var(--border);
-      padding: 6px 10px;
-      cursor: pointer;
-      letter-spacing: 0.05em;
+      background: rgba(28, 24, 20, .8);
+      padding: 4px 8px;
+      border-radius: 2px;
+      letter-spacing: .06em;
+      margin-left: auto;
+      opacity: 0;
+      transition: opacity .3s;
     }
 
-    .swap-btn:hover {
-      color: var(--ink);
-      border-color: var(--ink-dim);
+    .zoom-indicator.visible {
+      opacity: 1;
     }
 
+    /* ---- aside ---- */
     aside {
       background: var(--panel);
       border-left: 1px solid var(--border);
@@ -171,81 +237,101 @@
     .aside-scroll {
       flex: 1;
       overflow-y: auto;
-      padding: 18px 18px 8px;
+      padding: 14px 14px 8px;
       display: flex;
       flex-direction: column;
-      gap: 22px;
-      scroll-behavior: smooth;
+      gap: 16px;
       scrollbar-width: thin;
       scrollbar-color: var(--panel-raised) var(--panel);
-      -webkit-overflow-scrolling: touch;
     }
 
     .aside-scroll::-webkit-scrollbar {
-      width: 8px;
+      width: 6px;
     }
 
     .aside-scroll::-webkit-scrollbar-track {
       background: var(--panel);
-      border-left: 1px solid var(--border);
     }
 
     .aside-scroll::-webkit-scrollbar-thumb {
       background: var(--panel-raised);
-      border-radius: 4px;
-      border: 1px solid var(--border);
+      border-radius: 3px;
     }
 
     .aside-scroll::-webkit-scrollbar-thumb:hover {
       background: var(--ink-dim);
-      border-color: var(--ink-dim);
     }
 
-    .aside-footer {
-      border-top: 1px solid var(--border);
-      padding: 12px 16px;
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .export-tip {
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--ink-dim);
-      text-align: center;
-      letter-spacing: 0.04em;
-    }
-
+    /* ---- section accordéon ---- */
     .field-group label.section {
       display: block;
       font-family: var(--mono);
-      font-size: 11px;
-      letter-spacing: 0.1em;
+      font-size: 10px;
+      letter-spacing: .1em;
       color: var(--ink-dim);
       text-transform: uppercase;
-      margin-bottom: 10px;
+      margin-bottom: 0;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+      padding: 2px 0;
+    }
+
+    .section-header:hover label.section {
+      color: var(--ink);
     }
 
     .section-header-left {
       display: flex;
       align-items: center;
+      gap: 6px;
     }
 
-    /* interrupteur activer/désactiver un filtre, façon contacteur de boîtier */
+    .collapse-arrow {
+      font-size: 10px;
+      color: var(--ink-dim);
+      transition: transform .2s;
+    }
+
+    .field-group.collapsed .collapse-arrow {
+      transform: rotate(-90deg);
+    }
+
+    .section-body {
+      overflow: hidden;
+      max-height: 800px;
+      transition: max-height .25s ease, opacity .15s;
+    }
+
+    .field-group.collapsed .section-body {
+      max-height: 0 !important;
+      opacity: 0 !important;
+      pointer-events: none;
+    }
+
+    .field-group.disabled .section-body {
+      opacity: .32;
+      pointer-events: none;
+    }
+
+    /* toggle on/off */
     .filter-toggle {
       appearance: none;
       -webkit-appearance: none;
-      width: 32px;
-      height: 17px;
+      width: 30px;
+      height: 16px;
       background: var(--panel-raised);
       border: 1px solid var(--border);
       border-radius: 2px;
       position: relative;
       cursor: pointer;
       flex-shrink: 0;
-      margin: 0 0 10px;
+      margin: 0;
     }
 
     .filter-toggle::after {
@@ -253,11 +339,11 @@
       position: absolute;
       top: 2px;
       left: 2px;
-      width: 11px;
-      height: 11px;
+      width: 10px;
+      height: 10px;
       background: var(--ink-dim);
       border-radius: 1px;
-      transition: left 0.15s, background 0.15s;
+      transition: left .15s, background .15s;
     }
 
     .filter-toggle:checked {
@@ -266,126 +352,26 @@
     }
 
     .filter-toggle:checked::after {
-      left: 17px;
+      left: 16px;
       background: var(--ink);
     }
 
-    /* ---------- accordéon ---------- */
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 10px;
-      cursor: pointer;
-      user-select: none;
+    .divider {
+      border-top: 1px solid var(--border);
+      margin: 0;
     }
 
-    .section-header label.section {
-      margin-bottom: 0;
-      cursor: pointer;
-    }
-
-    .section-header-left {
-      display: flex;
-      align-items: center;
-    }
-
-    .section-header:hover label.section {
-      color: var(--ink);
-    }
-
-    .collapse-arrow {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 16px;
-      height: 16px;
-      color: var(--ink-dim);
-      font-size: 10px;
-      font-family: var(--mono);
-      transition: transform 0.2s ease, color 0.15s;
-      flex-shrink: 0;
-      margin-left: 6px;
-    }
-
-    .section-header:hover .collapse-arrow {
-      color: var(--ink);
-    }
-
-    .field-group.collapsed .collapse-arrow {
-      transform: rotate(-90deg);
-    }
-
-    .field-group .section-body {
-      transition: opacity 0.15s, max-height 0.25s ease, margin-top 0.2s ease;
-      overflow: hidden;
-      max-height: 600px;
-      margin-top: 0;
-    }
-
-    .field-group.collapsed .section-body {
-      max-height: 0 !important;
-      opacity: 0 !important;
-      pointer-events: none;
-      margin-top: 0;
-    }
-
-    .field-group.disabled .section-body {
-      opacity: 0.32;
-      pointer-events: none;
-    }
-
-    select,
-    input[type="text"] {
-      width: 100%;
-      background: var(--panel-raised);
-      border: 1px solid var(--border);
-      color: var(--ink);
-      font-family: var(--sans);
-      font-size: 13px;
-      padding: 8px 10px;
-      border-radius: 2px;
-    }
-
-    .color-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    .color-row .arrow {
-      color: var(--ink-dim);
-      font-family: var(--mono);
-    }
-
-    .color-row label {
-      font-size: 12px;
-      color: var(--ink-dim);
-      display: block;
-      margin-bottom: 4px;
-    }
-
-    input[type="color"] {
-      width: 44px;
-      height: 32px;
-      border: 1px solid var(--border);
-      background: none;
-      border-radius: 2px;
-      cursor: pointer;
-      padding: 0;
-    }
-
+    /* sliders */
     .slider-row {
-      margin-top: 12px;
+      margin-top: 10px;
     }
 
     .slider-row .slider-label {
       display: flex;
       justify-content: space-between;
-      font-size: 12px;
+      font-size: 11px;
       color: var(--ink-dim);
-      margin-bottom: 6px;
+      margin-bottom: 4px;
       font-family: var(--mono);
     }
 
@@ -398,8 +384,8 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-top: 12px;
-      font-size: 13px;
+      margin-top: 10px;
+      font-size: 12px;
       color: var(--ink-dim);
     }
 
@@ -407,9 +393,25 @@
       accent-color: var(--teal);
     }
 
-    .divider {
+    select {
+      width: 100%;
+      background: var(--panel-raised);
+      border: 1px solid var(--border);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 12px;
+      padding: 6px 8px;
+      border-radius: 2px;
+    }
+
+    /* ---- footer export ---- */
+    .aside-footer {
       border-top: 1px solid var(--border);
-      margin: 0;
+      padding: 10px 14px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
 
     .export-btn {
@@ -417,22 +419,19 @@
       background: var(--safelight);
       color: #1c1814;
       border: none;
-      outline-offset: 0;
-      transition: all 250ms ease;
       font-family: var(--mono);
       font-weight: 700;
-      font-size: 13px;
-      letter-spacing: 0.08em;
-      padding: 12px;
+      font-size: 12px;
+      letter-spacing: .08em;
+      padding: 10px;
       border-radius: 2px;
       cursor: pointer;
       text-transform: uppercase;
+      transition: background .2s;
     }
 
     .export-btn:hover {
       background: #d6502f;
-      outline: 2px solid rgba(255, 255, 255, 0.15);
-      outline-offset: 0.25em;
     }
 
     .export-btn:disabled {
@@ -441,53 +440,67 @@
       cursor: not-allowed;
     }
 
-    /* ---------- bandeau pellicule (signature + progression) ---------- */
+    .export-path-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .export-path-row input[type="checkbox"] {
+      accent-color: var(--teal);
+      flex-shrink: 0;
+    }
+
+    .export-path-row label {
+      font-size: 11px;
+      color: var(--ink-dim);
+      font-family: var(--mono);
+      cursor: pointer;
+    }
+
+    .export-custom-path {
+      display: flex;
+      gap: 6px;
+    }
+
+    .export-custom-path input[type="text"] {
+      flex: 1;
+      background: var(--panel-raised);
+      border: 1px solid var(--border);
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 5px 7px;
+      border-radius: 2px;
+      min-width: 0;
+    }
+
+    .export-custom-path .browse-btn {
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 5px 8px;
+      background: var(--panel-raised);
+      border: 1px solid var(--border);
+      color: var(--ink-dim);
+      cursor: pointer;
+      border-radius: 2px;
+      white-space: nowrap;
+    }
+
+    .export-custom-path .browse-btn:hover {
+      color: var(--ink);
+      border-color: var(--ink-dim);
+    }
+
+    /* ---- filmstrip ---- */
     .filmstrip {
       position: relative;
-      height: 46px;
+      height: 40px;
       background: #0f0d0a;
       border-top: 1px solid var(--border);
       display: flex;
       align-items: center;
       overflow: hidden;
-      flex-shrink: 0;
-    }
-
-    .filmstrip .sprockets {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 6px;
-    }
-
-    .filmstrip .sprockets::before,
-    .filmstrip .sprockets::after {
-      content: none;
-    }
-
-    .sprocket-row {
-      position: absolute;
-      top: 6px;
-      left: 0;
-      right: 0;
-      height: 6px;
-      display: flex;
-      gap: 14px;
-      padding: 0 10px;
-    }
-
-    .sprocket-row.bottom {
-      top: auto;
-      bottom: 6px;
-    }
-
-    .sprocket-row span {
-      width: 6px;
-      height: 6px;
-      background: var(--border);
-      border-radius: 1px;
       flex-shrink: 0;
     }
 
@@ -498,8 +511,33 @@
       left: 0;
       width: 0%;
       background: linear-gradient(90deg, var(--safelight-dim), var(--safelight));
-      transition: width 0.25s ease;
-      opacity: 0.35;
+      transition: width .25s ease;
+      opacity: .35;
+    }
+
+    .sprocket-row {
+      position: absolute;
+      left: 0;
+      right: 0;
+      display: flex;
+      gap: 14px;
+      padding: 0 10px;
+    }
+
+    .sprocket-row.top {
+      top: 5px;
+    }
+
+    .sprocket-row.bottom {
+      bottom: 5px;
+    }
+
+    .sprocket-row span {
+      width: 5px;
+      height: 5px;
+      background: var(--border);
+      border-radius: 1px;
+      flex-shrink: 0;
     }
 
     .filmstrip-status {
@@ -507,8 +545,8 @@
       z-index: 2;
       margin: 0 auto;
       font-family: var(--mono);
-      font-size: 11px;
-      letter-spacing: 0.08em;
+      font-size: 10px;
+      letter-spacing: .08em;
       color: var(--ink-dim);
       text-transform: uppercase;
     }
@@ -517,32 +555,493 @@
       color: var(--ink);
     }
 
-    /* ---- indicateur de zoom ---- */
-    .zoom-hint {
-      position: absolute;
-      bottom: 12px;
+    /* ---- toast notifications ---- */
+    #toast {
+      position: fixed;
+      bottom: 56px;
       left: 50%;
       transform: translateX(-50%);
       font-family: var(--mono);
       font-size: 11px;
-      color: var(--ink-dim);
-      background: rgba(28, 24, 20, 0.75);
-      padding: 4px 10px;
+      letter-spacing: .05em;
+      background: var(--panel-raised);
+      border: 1px solid var(--border);
+      color: var(--ink);
+      padding: 7px 14px;
       border-radius: 2px;
-      pointer-events: none;
+      z-index: 100;
       opacity: 0;
-      transition: opacity 0.3s;
-      z-index: 10;
+      pointer-events: none;
+      transition: opacity .25s;
+      white-space: nowrap;
     }
 
-    .zoom-hint.visible {
+    #toast.show {
       opacity: 1;
     }
 
-    /* ---------- panneau de réglages ---------- */
-    aside * {
-      will-change: auto;
+    /* ---- modale d'export ---- */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .72);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
     }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      width: 460px;
+      max-width: 90vw;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, .6);
+      animation: modalIn .18s ease;
+    }
+
+    @keyframes modalIn {
+      from {
+        opacity: 0;
+        transform: translateY(-12px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-title {
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--ink);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--ink-dim);
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      padding: 0 2px;
+    }
+
+    .modal-close:hover {
+      color: var(--ink);
+    }
+
+    .modal-body {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .modal-footer {
+      padding: 12px 18px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .mfield {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .mfield label {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--ink-dim);
+    }
+
+    .mfield input[type="text"],
+    .mfield select {
+      background: var(--panel-raised);
+      border: 1px solid var(--border);
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 7px 10px;
+      border-radius: 2px;
+      width: 100%;
+    }
+
+    .mfield input[type="text"]:focus,
+    .mfield select:focus {
+      outline: 1px solid var(--teal);
+      border-color: var(--teal);
+    }
+
+    .mradio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .mradio {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      padding: 7px 10px;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      background: var(--panel-raised);
+      transition: border-color .12s;
+    }
+
+    .mradio:has(input:checked) {
+      border-color: var(--teal);
+      background: rgba(79, 114, 104, .08);
+    }
+
+    .mradio input[type="radio"] {
+      accent-color: var(--teal);
+      margin: 0;
+    }
+
+    .mradio-label {
+      font-size: 12px;
+      color: var(--ink-dim);
+    }
+
+    .mradio:has(input:checked) .mradio-label {
+      color: var(--ink);
+    }
+
+    .mrow {
+      display: flex;
+      gap: 8px;
+    }
+
+    .mrow .mfield {
+      flex: 1;
+    }
+
+    .path-row {
+      display: flex;
+      gap: 6px;
+      align-items: stretch;
+    }
+
+    .path-row input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .path-browse {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .04em;
+      padding: 0 10px;
+      background: var(--panel-raised);
+      border: 1px solid var(--border);
+      color: var(--ink-dim);
+      cursor: pointer;
+      border-radius: 2px;
+      white-space: nowrap;
+    }
+
+    .path-browse:hover {
+      color: var(--ink);
+      border-color: var(--ink-dim);
+    }
+
+    .mbtn {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: 8px 16px;
+      border-radius: 2px;
+      cursor: pointer;
+    }
+
+    .mbtn-cancel {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--ink-dim);
+    }
+
+    .mbtn-cancel:hover {
+      border-color: var(--ink-dim);
+      color: var(--ink);
+    }
+
+    .mbtn-confirm {
+      background: var(--safelight);
+      border: none;
+      color: #1c1814;
+      font-weight: 700;
+    }
+
+    .mbtn-confirm:hover {
+      background: #d6502f;
+    }
+
+    .mbtn-confirm:disabled {
+      background: var(--safelight-dim);
+      color: var(--ink-dim);
+      cursor: not-allowed;
+    }
+
+    .filename-preview {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--teal);
+      padding: 5px 8px;
+      background: rgba(79, 114, 104, .08);
+      border: 1px solid rgba(79, 114, 104, .2);
+      border-radius: 2px;
+      word-break: break-all;
+      min-height: 28px;
+    }
+
+    /* ---- HSL Color Picker ---- */
+    .hsl-color-picker {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+
+    .hsl-swatch {
+      position: relative;
+      height: 32px;
+      border-radius: 3px;
+      border: 1.5px solid transparent;
+      cursor: pointer;
+      transition: border-color .12s, transform .1s;
+      overflow: hidden;
+    }
+
+    .hsl-swatch:hover {
+      transform: scaleY(1.06);
+    }
+
+    .hsl-swatch.active {
+      border-color: var(--ink) !important;
+    }
+
+    .hsl-swatch .swatch-label {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: .05em;
+      color: rgba(255, 255, 255, .85);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, .6);
+      padding: 2px 0;
+      background: linear-gradient(transparent, rgba(0, 0, 0, .35));
+      text-transform: uppercase;
+    }
+
+    .hsl-swatch .swatch-dot {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .9);
+      opacity: 0;
+      transition: opacity .15s;
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, .3);
+    }
+
+    .hsl-swatch.modified .swatch-dot {
+      opacity: 1;
+    }
+
+    /* ---- Compare avant/après ---- */
+    .compare-bar {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 30;
+      display: none;
+      gap: 4px;
+      background: rgba(28,24,20,.88);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 4px;
+      pointer-events: auto;
+    }
+    .compare-bar.visible { display: flex; }
+    .cbtn {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--ink-dim);
+      cursor: pointer;
+      border-radius: 2px;
+      white-space: nowrap;
+      transition: color .1s, border-color .1s, background .1s;
+    }
+    .cbtn:hover { color: var(--ink); border-color: var(--border); }
+    .cbtn.active { color: var(--ink); background: var(--panel-raised); border-color: var(--ink-dim); }
+    .cbtn-close {
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 3px 7px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--ink-dim);
+      cursor: pointer;
+      border-radius: 2px;
+      margin-left: 4px;
+    }
+    .cbtn-close:hover { color: var(--safelight); }
+
+    /* Split vertical (glissière) */
+    #compareCanvas {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform-origin: center center;
+      transform: translate(-50%, -50%);
+      image-rendering: pixelated;
+      box-shadow: 0 0 0 1px var(--border), 0 12px 40px rgba(0,0,0,.6);
+      pointer-events: none;
+    }
+    #splitHandle {
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 2px;
+      background: var(--ink);
+      cursor: ew-resize;
+      z-index: 25;
+      display: none;
+      transform: translateX(-50%);
+      box-shadow: 0 0 8px rgba(0,0,0,.8);
+    }
+    #splitHandle::before {
+      content: '◀▶';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%,-50%);
+      font-size: 10px;
+      color: var(--ink);
+      background: rgba(28,24,20,.9);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 4px 5px;
+      white-space: nowrap;
+      letter-spacing: -1px;
+      pointer-events: none;
+    }
+    #splitHandle.active { display: block; }
+
+    /* Mode côte-à-côte */
+    .side-by-side-wrap {
+      position: absolute;
+      inset: 0;
+      display: none;
+      gap: 2px;
+    }
+    .side-by-side-wrap.active { display: flex; }
+    .sbs-panel {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sbs-label {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--ink-dim);
+      background: rgba(28,24,20,.8);
+      padding: 3px 8px;
+      border-radius: 2px;
+      border: 1px solid var(--border);
+      pointer-events: none;
+    }
+    .sbs-panel canvas {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      image-rendering: pixelated;
+      box-shadow: 0 0 0 1px var(--border);
+    }
+
+    /* Mode hold (maintenir clic) */
+    #holdOverlay {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 24;
+      cursor: crosshair;
+    }
+    #holdOverlay.active { display: flex; }
+    #holdOverlay canvas {
+      position: absolute; top: 50%; left: 50%;
+      transform-origin: center center;
+      image-rendering: pixelated;
+      box-shadow: 0 0 0 1px var(--border), 0 12px 40px rgba(0,0,0,.6);
+    }
+    #holdHint {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--ink-dim);
+      background: rgba(28,24,20,.85);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 4px 10px;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .sbs-panel canvas { cursor: grab; }
+    .sbs-panel canvas.grabbing { cursor: grabbing; }
   </style>
 </head>
 
@@ -550,42 +1049,59 @@
 
   <header>
     <div class="logo">PIKAD<span>O</span></div>
-    <div class="tagline">// labo argentique — grain &amp; teinte</div>
+    <div class="tagline" data-i18n="tagline">// labo argentique</div>
+    <div class="header-actions">
+      <button class="hbtn" id="btnOpen" data-i18n-title="title_open" data-i18n="btn_open"></button>
+      <button class="hbtn" id="btnCompare" data-i18n="btn_compare" disabled>Comparer</button>
+      <button class="hbtn" id="btnFit" data-i18n-title="title_fit" data-i18n="btn_fit" disabled></button>
+      <button class="hbtn" id="btnZoom100" title="Zoom 100% (1)" disabled>100%</button>
+      <button class="hbtn danger" id="btnReset" data-i18n-title="title_reset" data-i18n="btn_reset" disabled></button>
+      <button class="hbtn" id="btnLang" style="font-size:14px;min-width:34px;text-align:center;letter-spacing:0;padding:4px 8px;">🇫🇷</button>
+    </div>
   </header>
 
   <main>
-    <div class="stage">
+    <div class="stage" id="stage">
       <div class="dropzone" id="dropzone">
-        <div class="icon">[ AUCUNE PELLICULE CHARGÉE ]</div>
-        <div class="hint">Clique ou glisse une photo / vidéo ici</div>
+        <div class="icon" data-i18n="dropzone_icon">[ AUCUNE PELLICULE CHARGÉE ]</div>
+        <div class="hint" data-i18n="dropzone_hint">Clique ou glisse une photo / vidéo ici</div>
       </div>
       <div class="preview-wrap" id="previewWrap">
         <canvas id="previewCanvas"></canvas>
         <video id="previewVideo" controls></video>
-        <div id="zoomHint" class="zoom-hint">100%</div>
-        <button class="swap-btn" id="changeFileBtn">CHANGER DE FICHIER</button>
+        <!-- Compare overlays -->
+        <canvas id="compareCanvas" style="display:none;"></canvas>
+        <div id="splitHandle"></div>
+        <div class="side-by-side-wrap" id="sbsWrap">
+          <div class="sbs-panel"><canvas id="sbsBefore"></canvas><span class="sbs-label" data-i18n="lbl_before">Avant</span></div>
+          <div class="sbs-panel"><canvas id="sbsAfter"></canvas><span class="sbs-label" data-i18n="lbl_after">Après</span></div>
+        </div>
+        <div id="holdOverlay">
+          <canvas id="holdCanvas"></canvas>
+          <div id="holdHint" data-i18n="hold_hint">Maintenir le clic pour voir l'original</div>
+        </div>
+      </div>
+      <div class="stage-controls">
+        <button class="hbtn" id="btnChangefile" data-i18n="btn_changefile">Changer fichier</button>
+        <div class="zoom-indicator" id="zoomIndicator">100%</div>
+      </div>
+      <!-- Barre de modes de comparaison -->
+      <div class="compare-bar" id="compareBar">
+        <button class="cbtn active" data-mode="split" data-i18n="cmp_split">◀▶ Glissière</button>
+        <button class="cbtn" data-mode="sbs" data-i18n="cmp_sbs">⬜⬜ Côte à côte</button>
+        <button class="cbtn" data-mode="hold" data-i18n="cmp_hold">👁 Maintenir</button>
+        <button class="cbtn-close" id="compareClose">✕</button>
       </div>
     </div>
 
     <aside>
       <div class="aside-scroll">
 
-        <div class="field-group">
-          <label class="section">Recette</label>
-          <select id="recipeSelect">
-            <option value="custom">— Réglage manuel —</option>
-            <option value="rougeBleu">Rouge sanglant → Bleu marine</option>
-            <option value="oliveBordeaux">Vert olive → Bordeaux</option>
-            <option value="sepiaDoux">Sépia doux</option>
-          </select>
-        </div>
-
-        <div class="divider"></div>
-
+        <!-- Exposition -->
         <div class="field-group collapsed" id="group-exposure">
           <div class="section-header">
             <div class="section-header-left">
-              <label class="section">Exposition</label>
+              <label class="section" data-i18n="sec_exposure">Exposition</label>
               <span class="collapse-arrow">▾</span>
             </div>
             <input type="checkbox" class="filter-toggle live-control" id="exposureEnabled" />
@@ -598,529 +1114,927 @@
             </div>
           </div>
         </div>
-
         <div class="divider"></div>
 
+        <!-- Niveaux -->
         <div class="field-group collapsed" id="group-levels">
           <div class="section-header">
             <div class="section-header-left">
-              <label class="section">Niveaux</label>
+              <label class="section" data-i18n="sec_levels">Niveaux</label>
               <span class="collapse-arrow">▾</span>
             </div>
             <input type="checkbox" class="filter-toggle live-control" id="levelsEnabled" />
           </div>
           <div class="section-body">
             <div class="slider-row">
-              <div class="slider-label"><span>Point noir</span><span id="inputBlackVal">0</span></div>
+              <div class="slider-label"><span data-i18n="lbl_blackpoint">Point noir</span><span
+                  id="inputBlackVal">0</span></div>
               <input type="range" data-default="0" class="live-control" id="inputBlack" min="0" max="254" value="0" />
             </div>
             <div class="slider-row">
-              <div class="slider-label"><span>Point blanc</span><span id="inputWhiteVal">255</span></div>
+              <div class="slider-label"><span data-i18n="lbl_whitepoint">Point blanc</span><span
+                  id="inputWhiteVal">255</span></div>
               <input type="range" data-default="255" class="live-control" id="inputWhite" min="1" max="255"
                 value="255" />
             </div>
             <div class="slider-row">
-              <div class="slider-label"><span>Gamma (tons moyens)</span><span id="gammaVal">1.00</span></div>
+              <div class="slider-label"><span data-i18n="lbl_gamma">Gamma</span><span id="gammaVal">1.00</span></div>
               <input type="range" data-default="1" class="live-control" id="gamma" min="0.1" max="3" step="0.05"
                 value="1" />
             </div>
           </div>
         </div>
-
         <div class="divider"></div>
 
-        <!-- ===== COURBES ===== -->
+        <!-- Courbes -->
         <div class="field-group collapsed" id="group-curves">
           <div class="section-header">
             <div class="section-header-left">
-              <label class="section">Courbes</label>
+              <label class="section" data-i18n="sec_curves">Courbes</label>
               <span class="collapse-arrow">▾</span>
             </div>
             <input type="checkbox" class="filter-toggle live-control" id="curvesEnabled" />
           </div>
           <div class="section-body">
-            <div id="curves-ui" style="margin-top:10px;">
-              <!-- Sélecteur de canal -->
+            <div style="margin-top:10px;">
               <div style="display:flex;gap:4px;margin-bottom:8px;">
                 <button class="curve-ch-btn active" data-ch="rgb"
-                  style="flex:1;font-family:var(--mono);font-size:10px;letter-spacing:.06em;padding:5px 0;background:var(--panel-raised);border:1px solid var(--border);color:var(--ink);cursor:pointer;border-radius:2px;text-transform:uppercase;">RVB</button>
+                  style="flex:1;font-family:var(--mono);font-size:10px;padding:5px 0;background:var(--panel-raised);border:1px solid var(--border);color:var(--ink);cursor:pointer;border-radius:2px;"
+                  data-i18n="ch_rgb">RVB</button>
                 <button class="curve-ch-btn" data-ch="r"
-                  style="flex:1;font-family:var(--mono);font-size:10px;letter-spacing:.06em;padding:5px 0;background:var(--panel-raised);border:1px solid var(--border);color:#c2452b;cursor:pointer;border-radius:2px;text-transform:uppercase;">R</button>
+                  style="flex:1;font-family:var(--mono);font-size:10px;padding:5px 0;background:var(--panel-raised);border:1px solid var(--border);color:#c2452b;cursor:pointer;border-radius:2px;">R</button>
                 <button class="curve-ch-btn" data-ch="g"
-                  style="flex:1;font-family:var(--mono);font-size:10px;letter-spacing:.06em;padding:5px 0;background:var(--panel-raised);border:1px solid var(--border);color:#4f7268;cursor:pointer;border-radius:2px;text-transform:uppercase;">V</button>
+                  style="flex:1;font-family:var(--mono);font-size:10px;padding:5px 0;background:var(--panel-raised);border:1px solid var(--border);color:#4f7268;cursor:pointer;border-radius:2px;"
+                  data-i18n="ch_g">V</button>
                 <button class="curve-ch-btn" data-ch="b"
-                  style="flex:1;font-family:var(--mono);font-size:10px;letter-spacing:.06em;padding:5px 0;background:var(--panel-raised);border:1px solid var(--border);color:#4a7aad;cursor:pointer;border-radius:2px;text-transform:uppercase;">B</button>
+                  style="flex:1;font-family:var(--mono);font-size:10px;padding:5px 0;background:var(--panel-raised);border:1px solid var(--border);color:#4a7aad;cursor:pointer;border-radius:2px;">B</button>
               </div>
-              <!-- Histogramme + courbe -->
               <div style="position:relative;">
-                <canvas id="curvesHistoCanvas" width="276" height="200"
-                  style="position:absolute;top:0;left:0;width:100%;height:200px;pointer-events:none;opacity:0.25;border-radius:2px;"></canvas>
-                <canvas id="curvesCanvas" width="276" height="200"
-                  style="width:100%;height:200px;display:block;border:1px solid var(--border);border-radius:2px;cursor:crosshair;background:var(--panel-raised);"></canvas>
+                <canvas id="curvesHistoCanvas" width="272" height="180"
+                  style="position:absolute;top:0;left:0;width:100%;height:180px;pointer-events:none;opacity:.22;border-radius:2px;"></canvas>
+                <canvas id="curvesCanvas" width="272" height="180"
+                  style="width:100%;height:180px;display:block;border:1px solid var(--border);border-radius:2px;cursor:crosshair;background:var(--panel-raised);"></canvas>
               </div>
-              <!-- Info point -->
-              <div id="curveInfo"
-                style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--ink-dim);margin-top:6px;">
-                <span>Entrée: <span id="curveInVal">—</span></span>
-                <span>Sortie: <span id="curveOutVal">—</span></span>
+              <div
+                style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--ink-dim);margin-top:5px;">
+                <span>In: <span id="curveInVal">—</span></span>
+                <span>Out: <span id="curveOutVal">—</span></span>
                 <span id="curvePtCount">2 points</span>
               </div>
-              <!-- Presets -->
-              <div style="margin-top:10px;">
-                <div
-                  style="font-family:var(--mono);font-size:10px;color:var(--ink-dim);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;">
-                  Presets</div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
-                  <button class="curve-preset" data-preset="linear"
-                    style="font-family:var(--mono);font-size:10px;padding:5px 4px;background:var(--panel-raised);border:1px solid var(--border);color:var(--ink-dim);cursor:pointer;border-radius:2px;text-align:left;letter-spacing:.04em;">↗
-                    Linéaire</button>
-                  <button class="curve-preset" data-preset="contrast"
-                    style="font-family:var(--mono);font-size:10px;padding:5px 4px;background:var(--panel-raised);border:1px solid var(--border);color:var(--ink-dim);cursor:pointer;border-radius:2px;text-align:left;letter-spacing:.04em;">S
-                    Contraste</button>
-                  <button class="curve-preset" data-preset="lift"
-                    style="font-family:var(--mono);font-size:10px;padding:5px 4px;background:var(--panel-raised);border:1px solid var(--border);color:var(--ink-dim);cursor:pointer;border-radius:2px;text-align:left;letter-spacing:.04em;">⬆
-                    Lift noirs</button>
-                  <button class="curve-preset" data-preset="fade"
-                    style="font-family:var(--mono);font-size:10px;padding:5px 4px;background:var(--panel-raised);border:1px solid var(--border);color:var(--ink-dim);cursor:pointer;border-radius:2px;text-align:left;letter-spacing:.04em;">≈
-                    Fade cinéma</button>
-                  <button class="curve-preset" data-preset="brighten"
-                    style="font-family:var(--mono);font-size:10px;padding:5px 4px;background:var(--panel-raised);border:1px solid var(--border);color:var(--ink-dim);cursor:pointer;border-radius:2px;text-align:left;letter-spacing:.04em;">☀
-                    Éclaircir</button>
-                  <button class="curve-preset" data-preset="darken"
-                    style="font-family:var(--mono);font-size:10px;padding:5px 4px;background:var(--panel-raised);border:1px solid var(--border);color:var(--ink-dim);cursor:pointer;border-radius:2px;text-align:left;letter-spacing:.04em;">🌑
-                    Assombrir</button>
-                </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:8px;">
+                <button class="curve-preset" data-preset="linear"
+                  style="font-family:var(--mono);font-size:10px;padding:5px 4px;background:var(--panel-raised);border:1px solid var(--border);color:var(--ink-dim);cursor:pointer;border-radius:2px;"
+                  data-i18n="preset_linear">↗ Linéaire</button>
+                <button class="curve-preset" data-preset="contrast"
+                  style="font-family:var(--mono);font-size:10px;padding:5px 4px;background:var(--panel-raised);border:1px solid var(--border);color:var(--ink-dim);cursor:pointer;border-radius:2px;"
+                  data-i18n="preset_contrast">S Contraste</button>
+                <button class="curve-preset" data-preset="lift"
+                  style="font-family:var(--mono);font-size:10px;padding:5px 4px;background:var(--panel-raised);border:1px solid var(--border);color:var(--ink-dim);cursor:pointer;border-radius:2px;"
+                  data-i18n="preset_lift">⬆ Lift noirs</button>
+                <button class="curve-preset" data-preset="fade"
+                  style="font-family:var(--mono);font-size:10px;padding:5px 4px;background:var(--panel-raised);border:1px solid var(--border);color:var(--ink-dim);cursor:pointer;border-radius:2px;"
+                  data-i18n="preset_fade">≈ Fade cinéma</button>
+                <button class="curve-preset" data-preset="brighten"
+                  style="font-family:var(--mono);font-size:10px;padding:5px 4px;background:var(--panel-raised);border:1px solid var(--border);color:var(--ink-dim);cursor:pointer;border-radius:2px;"
+                  data-i18n="preset_brighten">☀ Éclaircir</button>
+                <button class="curve-preset" data-preset="darken"
+                  style="font-family:var(--mono);font-size:10px;padding:5px 4px;background:var(--panel-raised);border:1px solid var(--border);color:var(--ink-dim);cursor:pointer;border-radius:2px;"
+                  data-i18n="preset_darken">🌑 Assombrir</button>
               </div>
-              <!-- Reset -->
               <button id="curvesReset"
-                style="margin-top:8px;width:100%;font-family:var(--mono);font-size:10px;letter-spacing:.06em;padding:6px;background:transparent;border:1px solid var(--border);color:var(--ink-dim);cursor:pointer;border-radius:2px;text-transform:uppercase;">Réinitialiser</button>
+                style="margin-top:6px;width:100%;font-family:var(--mono);font-size:10px;padding:5px;background:transparent;border:1px solid var(--border);color:var(--ink-dim);cursor:pointer;border-radius:2px;"
+                data-i18n="btn_reset_curves">Réinitialiser courbes</button>
             </div>
           </div>
         </div>
-
         <div class="divider"></div>
 
+        <!-- Contraste -->
         <div class="field-group collapsed" id="group-contrast">
           <div class="section-header">
             <div class="section-header-left">
-              <label class="section">Contraste</label>
+              <label class="section" data-i18n="sec_contrast">Contraste</label>
               <span class="collapse-arrow">▾</span>
             </div>
             <input type="checkbox" class="filter-toggle live-control" id="contrastEnabled" />
           </div>
           <div class="section-body">
             <div class="slider-row">
-              <div class="slider-label"><span>Quantité</span><span id="contrastVal">0</span></div>
+              <div class="slider-label"><span data-i18n="lbl_amount">Quantité</span><span id="contrastVal">0</span>
+              </div>
               <input type="range" data-default="0" class="live-control" id="contrastAmount" min="-100" max="100"
                 value="0" />
             </div>
           </div>
         </div>
-
         <div class="divider"></div>
 
+        <!-- Saturation -->
         <div class="field-group collapsed" id="group-saturation">
           <div class="section-header">
             <div class="section-header-left">
-              <label class="section">Saturation</label>
+              <label class="section" data-i18n="sec_saturation">Saturation</label>
               <span class="collapse-arrow">▾</span>
             </div>
             <input type="checkbox" class="filter-toggle live-control" id="saturationEnabled" />
           </div>
           <div class="section-body">
             <div class="slider-row">
-              <div class="slider-label"><span>Quantité</span><span id="saturationVal">0</span></div>
+              <div class="slider-label"><span data-i18n="lbl_amount">Quantité</span><span id="saturationVal">0</span>
+              </div>
               <input type="range" data-default="0" class="live-control" id="saturationAmount" min="-100" max="100"
                 value="0" />
             </div>
           </div>
         </div>
-
         <div class="divider"></div>
 
-        <div class="field-group collapsed" id="group-colorSwap">
-          <div class="section-header">
-            <div class="section-header-left">
-              <label class="section">Teinte ciblée</label>
-              <span class="collapse-arrow">▾</span>
-            </div>
-            <input type="checkbox" class="filter-toggle live-control" id="colorSwapEnabled" />
-          </div>
-          <div class="section-body">
-            <div class="color-row">
-              <div>
-                <label>Couleur cible</label>
-                <input type="color" class="live-control" id="targetColor" value="#8b0000" />
-              </div>
-              <div class="arrow">→</div>
-              <div>
-                <label>Remplacement</label>
-                <input type="color" class="live-control" id="replacementColor" value="#000080" />
-              </div>
-            </div>
-
-            <div class="slider-row">
-              <div class="slider-label"><span>Plage de teinte</span><span id="hueRangeVal">15°</span></div>
-              <input type="range" data-default="15" class="live-control" id="hueRange" min="2" max="60" value="15" />
-            </div>
-            <div class="slider-row">
-              <div class="slider-label"><span>Dégradé des bords</span><span id="featherVal">8°</span></div>
-              <input type="range" data-default="8" class="live-control" id="feather" min="0" max="40" value="8" />
-            </div>
-          </div>
-        </div>
-
-        <div class="divider"></div>
-
+        <!-- Netteté -->
         <div class="field-group collapsed" id="group-sharpen">
           <div class="section-header">
             <div class="section-header-left">
-              <label class="section">Netteté</label>
+              <label class="section" data-i18n="sec_sharpen">Netteté (USM)</label>
               <span class="collapse-arrow">▾</span>
             </div>
             <input type="checkbox" class="filter-toggle live-control" id="sharpenEnabled" />
           </div>
-
           <div class="section-body">
             <div class="slider-row">
-              <div class="slider-label"><span>Rayon</span><span id="sharpenRadiusVal">2px</span></div>
+              <div class="slider-label"><span data-i18n="lbl_radius">Rayon</span><span id="sharpenRadiusVal">2px</span>
+              </div>
               <input type="range" data-default="2" class="live-control" id="sharpenRadius" min="1" max="15" step="1"
                 value="2" />
             </div>
             <div class="slider-row">
-              <div class="slider-label"><span>Sigma</span><span id="sharpenSigmaVal">1.0</span></div>
+              <div class="slider-label"><span data-i18n="lbl_sigma">Sigma</span><span id="sharpenSigmaVal">1.0</span>
+              </div>
               <input type="range" data-default="1" class="live-control" id="sharpenSigma" min="0.1" max="8" step="0.1"
                 value="1.0" />
             </div>
             <div class="slider-row">
-              <div class="slider-label"><span>Intensité</span><span id="sharpenAmountVal">100%</span></div>
+              <div class="slider-label"><span data-i18n="lbl_intensity">Intensité</span><span
+                  id="sharpenAmountVal">100%</span></div>
               <input type="range" data-default="100" class="live-control" id="sharpenAmount" min="0" max="300" step="5"
                 value="100" />
             </div>
             <div class="slider-row">
-              <div class="slider-label"><span>Seuil (anti-bruit)</span><span id="sharpenThresholdVal">0</span></div>
+              <div class="slider-label"><span data-i18n="lbl_threshold">Seuil (anti-bruit)</span><span
+                  id="sharpenThresholdVal">0</span></div>
               <input type="range" data-default="0" class="live-control" id="sharpenThreshold" min="0" max="40" step="1"
                 value="0" />
             </div>
           </div>
         </div>
-
         <div class="divider"></div>
 
+        <!-- Grain -->
         <div class="field-group collapsed" id="group-grain">
           <div class="section-header">
             <div class="section-header-left">
-              <label class="section">Grain</label>
+              <label class="section" data-i18n="sec_grain">Grain</label>
               <span class="collapse-arrow">▾</span>
             </div>
             <input type="checkbox" class="filter-toggle live-control" id="grainEnabled" />
           </div>
           <div class="section-body">
             <div class="slider-row">
-              <div class="slider-label"><span>Intensité</span><span id="grainIntensityVal">18</span></div>
+              <div class="slider-label"><span data-i18n="lbl_intensity">Intensité</span><span
+                  id="grainIntensityVal">0</span></div>
               <input type="range" data-default="0" class="live-control" id="grainIntensity" min="0" max="60"
                 value="0" />
             </div>
             <div class="slider-row">
-              <div class="slider-label"><span>Taille du grain</span><span id="grainSizeVal">1px</span></div>
+              <div class="slider-label"><span data-i18n="lbl_size">Taille</span><span id="grainSizeVal">1px</span></div>
               <input type="range" data-default="1" class="live-control" id="grainSize" min="1" max="4" value="1" />
             </div>
             <div class="checkbox-row">
               <input type="checkbox" class="live-control" id="grainMono" checked />
-              <label for="grainMono">Grain monochrome (look pellicule classique)</label>
+              <label for="grainMono" data-i18n="lbl_grain_mono">Grain monochrome (look pellicule classique)</label>
             </div>
           </div>
         </div>
-
         <div class="divider"></div>
 
+        <!-- Teintes HSL -->
+        <div class="field-group collapsed" id="group-hsl">
+          <div class="section-header">
+            <div class="section-header-left">
+              <label class="section" data-i18n="sec_hsl">Teintes HSL</label>
+              <span class="collapse-arrow">▾</span>
+            </div>
+            <input type="checkbox" class="filter-toggle live-control" id="hslEnabled" />
+          </div>
+          <div class="section-body">
+            <div style="margin-top:10px;">
+              <!-- Palette de couleurs -->
+              <div class="hsl-color-picker" id="hslColorPicker"></div>
+              <!-- Sliders -->
+              <div class="slider-row">
+                <div class="slider-label"><span data-i18n="lbl_hue">Teinte</span><span id="hslHueVal">0°</span></div>
+                <input type="range" class="live-control hsl-slider" id="hslHue" min="-180" max="180" step="1" value="0"
+                  data-default="0" />
+              </div>
+              <div class="slider-row">
+                <div class="slider-label"><span data-i18n="lbl_hsl_sat">Saturation</span><span id="hslSatVal">0</span>
+                </div>
+                <input type="range" class="live-control hsl-slider" id="hslSat" min="-100" max="100" step="1" value="0"
+                  data-default="0" />
+              </div>
+              <div class="slider-row">
+                <div class="slider-label"><span data-i18n="lbl_lum">Luminosité</span><span id="hslLumVal">0</span></div>
+                <input type="range" class="live-control hsl-slider" id="hslLum" min="-100" max="100" step="1" value="0"
+                  data-default="0" />
+              </div>
+              <button id="hslResetColor"
+                style="margin-top:6px;width:100%;font-family:var(--mono);font-size:10px;padding:5px;background:transparent;border:1px solid var(--border);color:var(--ink-dim);cursor:pointer;border-radius:2px;"
+                data-i18n="btn_reset_hsl_color">Réinit. couleur</button>
+            </div>
+          </div>
+        </div>
+        <div class="divider"></div>
+
+        <!-- LUT -->
         <div class="field-group collapsed" id="group-lut">
           <div class="section-header">
             <div class="section-header-left">
-              <label class="section">LUT Cinéma (.cube)</label>
+              <label class="section" data-i18n="sec_lut">LUT Cinéma (.cube)</label>
               <span class="collapse-arrow">▾</span>
             </div>
             <input type="checkbox" class="filter-toggle live-control" id="lutEnabled" />
           </div>
           <div class="section-body">
-            <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
-              <input type="file" id="lutInput" accept=".cube" style="display: none;" />
-              <button type="button" class="swap-btn" id="lutSelectBtn" style="position: static; width: 100%;">
-                CHARGER UNE LUT
-              </button>
+            <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">
+              <input type="file" id="lutInput" accept=".cube" style="display:none;" />
+              <button type="button" class="hbtn" id="lutSelectBtn" style="width:100%;text-align:center;"
+                data-i18n="btn_load_lut">Charger une LUT</button>
               <div id="lutName"
-                style="font-size: 11px; font-family: var(--mono); color: var(--ink-dim); text-align: center; word-break: break-all;">
-                Aucune LUT chargée
+                style="font-size:10px;font-family:var(--mono);color:var(--ink-dim);text-align:center;word-break:break-all;"
+                data-i18n="lut_none">Aucune LUT chargée</div>
+              <div class="slider-row" style="margin-top:0;">
+                <div class="slider-label"><span data-i18n="lbl_intensity">Intensité</span><span
+                    id="lutIntensityVal">100%</span></div>
+                <input type="range" data-default="100" id="lutIntensity" class="live-control" min="0" max="100"
+                  value="100" />
               </div>
-
-              <div class="control-row">
-                <label>Intensité</label>
-                <div class="slider-container">
-                  <input type="range" data-default="100" id="lutIntensity" class="live-control" min="0" max="100"
-                    value="100" />
-                  <span class="value-display" id="lutIntensityVal">100%</span>
-                </div>
-              </div>
-
-              <div class="control-row" style="flex-direction: column; align-items: flex-start; gap: 5px;">
-                <label>Ordre des axes (Grille 3D)</label>
-                <select id="lutLayout" class="live-control"
-                  style="width: 100%; background: var(--panel-raised); color: var(--ink); border: 1px solid var(--border); padding: 4px; font-family: var(--sans); font-size: 12px;">
-                  <option value="RGB">Standard (R -> G -> B)</option>
-                  <option value="BGR">Inversé (B -> G -> R)</option>
+              <div>
+                <div style="font-size:10px;font-family:var(--mono);color:var(--ink-dim);margin-bottom:5px;"
+                  data-i18n="lbl_axis_order">Ordre des axes</div>
+                <select id="lutLayout" class="live-control">
+                  <option value="RGB" data-i18n="lut_standard">Standard (R→G→B)</option>
+                  <option value="BGR" data-i18n="lut_reversed">Inversé (B→G→R)</option>
                 </select>
               </div>
             </div>
           </div>
         </div>
-
         <div class="divider"></div>
 
       </div><!-- /aside-scroll -->
 
+      <!-- Footer export -->
       <div class="aside-footer">
-        <button class="export-btn" id="exportBtn" disabled>Exporter…</button>
-        <div class="export-tip">Ctrl+E · choisir dossier &amp; format</div>
+        <button class="export-btn" id="exportBtn" disabled data-i18n="btn_export">Exporter</button>
       </div>
     </aside>
   </main>
 
   <div class="filmstrip">
     <div class="filmstrip-fill" id="filmstripFill"></div>
-    <div class="sprocket-row" id="sprocketTop"></div>
-    <div class="filmstrip-status" id="status">Aucun fichier — chargez une photo ou une vidéo</div>
+    <div class="sprocket-row top" id="sprocketTop"></div>
+    <div class="filmstrip-status" id="status" data-i18n="status_nofile">Aucun fichier — ouvrir une photo ou une vidéo
+    </div>
     <div class="sprocket-row bottom" id="sprocketBottom"></div>
   </div>
 
-  <script>
-    // ---- génère les perforations de la pellicule (décor) ----
-    function fillSprockets(el, count) {
-      el.innerHTML = '';
-      for (let i = 0; i < count; i++) {
-        const s = document.createElement('span');
-        el.appendChild(s);
-      }
-    }
-    fillSprockets(document.getElementById('sprocketTop'), 40);
-    fillSprockets(document.getElementById('sprocketBottom'), 40);
+  <div id="toast"></div>
 
-    // ---- état ----
+  <!-- ================================================================
+     MODALE D'EXPORT
+================================================================ -->
+  <div class="modal-backdrop" id="exportModal">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" data-i18n="modal_title">Exporter le rendu</span>
+        <button class="modal-close" id="modalClose">✕</button>
+      </div>
+      <div class="modal-body">
+
+        <!-- Format -->
+        <div class="mfield">
+          <label data-i18n="modal_format">Format de sortie</label>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;">
+            <label class="mradio"><input type="radio" name="exportFormat" value="jpg" checked /><span
+                class="mradio-label">JPEG</span></label>
+            <label class="mradio"><input type="radio" name="exportFormat" value="png" /><span
+                class="mradio-label">PNG</span></label>
+            <label class="mradio"><input type="radio" name="exportFormat" value="webp" /><span
+                class="mradio-label">WebP</span></label>
+            <label class="mradio"><input type="radio" name="exportFormat" value="avif" /><span
+                class="mradio-label">AVIF</span></label>
+            <label class="mradio"><input type="radio" name="exportFormat" value="heif" /><span
+                class="mradio-label">HEIF</span></label>
+            <label class="mradio"><input type="radio" name="exportFormat" value="tiff" /><span
+                class="mradio-label">TIFF</span></label>
+          </div>
+        </div>
+
+        <!-- Qualité (JPEG/WebP/AVIF) -->
+        <div class="mfield" id="qualityRow">
+          <label><span data-i18n="modal_quality">Qualité</span> — <span id="qualityVal">92</span>%</label>
+          <input type="range" id="exportQuality" min="1" max="100" value="92"
+            style="width:100%;accent-color:var(--teal);" />
+        </div>
+
+        <!-- Destination -->
+        <div class="mfield">
+          <label data-i18n="modal_dest">Destination</label>
+          <div class="mradio-group">
+            <label class="mradio"><input type="radio" name="exportDest" value="same" checked /><span
+                class="mradio-label" data-i18n="dest_same">Même dossier que le fichier source</span></label>
+            <label class="mradio"><input type="radio" name="exportDest" value="custom" /><span class="mradio-label"
+                data-i18n="lbl_custom_path">Chemin personnalisé</span></label>
+          </div>
+          <div class="path-row" id="customDestRow" style="display:none;margin-top:6px;">
+            <input type="text" id="customDestPath" data-i18n-placeholder="placeholder_choose_folder"
+              placeholder="Choisir un dossier…" />
+            <input type="file" id="destDirPicker" webkitdirectory style="display:none;" />
+            <button class="path-browse" id="browseDestBtn" data-i18n="btn_browse_short">Parcourir</button>
+          </div>
+        </div>
+
+        <!-- Nommage -->
+        <div class="mrow">
+          <div class="mfield">
+            <label data-i18n="modal_prefix">Préfixe</label>
+            <input type="text" id="exportPrefix" placeholder="" />
+          </div>
+          <div class="mfield">
+            <label data-i18n="modal_basename">Nom de base</label>
+            <input type="text" id="exportBasename" data-i18n-placeholder="placeholder_original_name"
+              placeholder="(nom original)" />
+          </div>
+          <div class="mfield">
+            <label data-i18n="modal_suffix">Suffixe</label>
+            <input type="text" id="exportSuffix" placeholder="-argentique" />
+          </div>
+        </div>
+
+        <!-- Options supplémentaires -->
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-dim);cursor:pointer;">
+            <input type="checkbox" id="exportAddDate" style="accent-color:var(--teal);" />
+            <span data-i18n="opt_add_date">Ajouter la date (YYYY-MM-DD)</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-dim);cursor:pointer;">
+            <input type="checkbox" id="exportAddTime" style="accent-color:var(--teal);" />
+            <span data-i18n="opt_add_time">Ajouter l'heure (HH-MM)</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-dim);cursor:pointer;">
+            <input type="checkbox" id="exportOverwrite" style="accent-color:var(--teal);" />
+            <span data-i18n="opt_overwrite">Écraser si existant</span>
+          </label>
+        </div>
+
+        <!-- Aperçu du nom de fichier -->
+        <div class="mfield">
+          <label data-i18n="modal_filename_preview">Aperçu du nom de fichier</label>
+          <div class="filename-preview" id="filenamePreview">—</div>
+        </div>
+
+        <!-- Taille estimée -->
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span
+            style="font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-dim);"
+            data-i18n="modal_est_size">Taille estimée</span>
+          <span id="estSizeVal" style="font-family:var(--mono);font-size:11px;color:var(--teal);">—</span>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="mbtn mbtn-cancel" id="modalCancelBtn" data-i18n="btn_cancel">Annuler</button>
+        <button class="mbtn mbtn-confirm" id="modalConfirmBtn" data-i18n="btn_export">Exporter</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ================================================================
+       I18N — SYSTÈME DE TRADUCTION
+    ================================================================ */
+    const TRANSLATIONS = {
+      fr: {
+        tagline: '// labo argentique',
+        btn_open: 'Ouvrir',
+        title_open: 'Ouvrir (Ctrl+O)',
+        btn_fit: 'Recadrer',
+        title_fit: 'Recadrer à l\'écran (F)',
+        btn_reset: 'Réinit.',
+        title_reset: 'Réinitialiser tous les paramètres',
+        btn_changefile: 'Changer fichier',
+        dropzone_icon: '[ AUCUNE PELLICULE CHARGÉE ]',
+        dropzone_hint: 'Clique ou glisse une photo / vidéo ici',
+        sec_exposure: 'Exposition',
+        sec_levels: 'Niveaux',
+        lbl_blackpoint: 'Point noir',
+        lbl_whitepoint: 'Point blanc',
+        lbl_gamma: 'Gamma',
+        sec_curves: 'Courbes',
+        ch_rgb: 'RVB',
+        ch_g: 'V',
+        preset_linear: '↗ Linéaire',
+        preset_contrast: 'S Contraste',
+        preset_lift: '⬆ Lift noirs',
+        preset_fade: '≈ Fade cinéma',
+        preset_brighten: '☀ Éclaircir',
+        preset_darken: '🌑 Assombrir',
+        btn_reset_curves: 'Réinitialiser courbes',
+        sec_contrast: 'Contraste',
+        lbl_amount: 'Quantité',
+        sec_saturation: 'Saturation',
+        sec_sharpen: 'Netteté (USM)',
+        lbl_radius: 'Rayon',
+        lbl_sigma: 'Sigma',
+        lbl_intensity: 'Intensité',
+        lbl_threshold: 'Seuil (anti-bruit)',
+        sec_grain: 'Grain',
+        lbl_size: 'Taille',
+        lbl_grain_mono: 'Grain monochrome (look pellicule classique)',
+        sec_lut: 'LUT Cinéma (.cube)',
+        btn_load_lut: 'Charger une LUT',
+        lut_none: 'Aucune LUT chargée',
+        lbl_axis_order: 'Ordre des axes',
+        lut_standard: 'Standard (R→G→B)',
+        lut_reversed: 'Inversé (B→G→R)',
+        btn_export: 'Exporter',
+        lbl_custom_path: 'Chemin personnalisé',
+        placeholder_dest_path: 'Chemin de destination…',
+        btn_browse: 'Parcourir…',
+        status_nofile: 'Aucun fichier — ouvrir une photo ou une vidéo',
+        modal_title: 'Exporter le rendu',
+        modal_format: 'Format de sortie',
+        modal_quality: 'Qualité',
+        modal_dest: 'Destination',
+        dest_same: 'Même dossier que le fichier source',
+        placeholder_choose_folder: 'Choisir un dossier…',
+        btn_browse_short: 'Parcourir',
+        modal_prefix: 'Préfixe',
+        modal_basename: 'Nom de base',
+        placeholder_original_name: '(nom original)',
+        modal_suffix: 'Suffixe',
+        opt_add_date: 'Ajouter la date (YYYY-MM-DD)',
+        opt_add_time: 'Ajouter l\'heure (HH-MM)',
+        opt_overwrite: 'Écraser si existant',
+        modal_filename_preview: 'Aperçu du nom de fichier',
+        modal_est_size: 'Taille estimée',
+        btn_cancel: 'Annuler',
+        // JS dynamic
+        toast_unknown_format: 'Format non reconnu',
+        status_loaded: 'Chargé : ',
+        toast_reset: 'Paramètres réinitialisés',
+        toast_no_folder: 'Sélection de dossier non disponible dans cette version',
+        label_source_folder: '(dossier source)',
+        status_processing: 'Traitement de l\'image…',
+        toast_export_done: 'Export terminé ✓',
+        status_export_done: 'Export terminé ✓  →  ',
+        status_video: 'Traitement vidéo…',
+        status_error: 'Erreur : ',
+        toast_export_error: 'Erreur export',
+        lut_reading: 'Lecture…',
+        toast_lut_loaded: 'LUT chargée : ',
+        lut_error: 'Erreur : ',
+        lut_invalid: 'LUT invalide ou format non supporté',
+        toast_video_done: 'Export vidéo terminé ✓',
+        video_analyse: 'Analyse…',
+        video_extraction: 'Extraction frames…',
+        video_traitement: 'Traitement…',
+        video_assemblage: 'Assemblage…',
+        video_done: 'Export terminé ✓',
+        curve_points: (n) => n + ' point' + (n > 1 ? 's' : ''),
+        sec_hsl: 'Teintes HSL',
+        lbl_hue: 'Teinte',
+        lbl_hsl_sat: 'Saturation',
+        lbl_lum: 'Luminosité',
+        btn_reset_hsl_color: 'Réinit. couleur',
+        hsl_red: 'Rouge', hsl_orange: 'Orange', hsl_yellow: 'Jaune',
+        hsl_green: 'Vert', hsl_cyan: 'Cyan', hsl_blue: 'Bleu',
+        hsl_purple: 'Violet', hsl_pink: 'Rose',
+        btn_compare: 'Comparer',
+        cmp_split: '◀▶ Glissière',
+        cmp_sbs: '⬜⬜ Côte à côte',
+        cmp_hold: '👁 Maintenir',
+        lbl_before: 'Avant',
+        lbl_after: 'Après',
+        hold_hint: 'Clic maintenu = original  •  relâcher = résultat',
+      },
+      en: {
+        tagline: '// film lab',
+        btn_open: 'Open',
+        title_open: 'Open (Ctrl+O)',
+        btn_fit: 'Fit',
+        title_fit: 'Fit to screen (F)',
+        btn_reset: 'Reset',
+        title_reset: 'Reset all parameters',
+        btn_changefile: 'Change file',
+        dropzone_icon: '[ NO FILM LOADED ]',
+        dropzone_hint: 'Click or drag a photo / video here',
+        sec_exposure: 'Exposure',
+        sec_levels: 'Levels',
+        lbl_blackpoint: 'Black point',
+        lbl_whitepoint: 'White point',
+        lbl_gamma: 'Gamma',
+        sec_curves: 'Curves',
+        ch_rgb: 'RGB',
+        ch_g: 'G',
+        preset_linear: '↗ Linear',
+        preset_contrast: 'S Contrast',
+        preset_lift: '⬆ Lift blacks',
+        preset_fade: '≈ Cinema fade',
+        preset_brighten: '☀ Brighten',
+        preset_darken: '🌑 Darken',
+        btn_reset_curves: 'Reset curves',
+        sec_contrast: 'Contrast',
+        lbl_amount: 'Amount',
+        sec_saturation: 'Saturation',
+        sec_sharpen: 'Sharpness (USM)',
+        lbl_radius: 'Radius',
+        lbl_sigma: 'Sigma',
+        lbl_intensity: 'Intensity',
+        lbl_threshold: 'Threshold (noise)',
+        sec_grain: 'Grain',
+        lbl_size: 'Size',
+        lbl_grain_mono: 'Monochrome grain (classic film look)',
+        sec_lut: 'Cinema LUT (.cube)',
+        btn_load_lut: 'Load a LUT',
+        lut_none: 'No LUT loaded',
+        lbl_axis_order: 'Axis order',
+        lut_standard: 'Standard (R→G→B)',
+        lut_reversed: 'Reversed (B→G→R)',
+        btn_export: 'Export',
+        lbl_custom_path: 'Custom path',
+        placeholder_dest_path: 'Destination path…',
+        btn_browse: 'Browse…',
+        status_nofile: 'No file — open a photo or video',
+        modal_title: 'Export render',
+        modal_format: 'Output format',
+        modal_quality: 'Quality',
+        modal_dest: 'Destination',
+        dest_same: 'Same folder as source file',
+        placeholder_choose_folder: 'Choose a folder…',
+        btn_browse_short: 'Browse',
+        modal_prefix: 'Prefix',
+        modal_basename: 'Base name',
+        placeholder_original_name: '(original name)',
+        modal_suffix: 'Suffix',
+        opt_add_date: 'Add date (YYYY-MM-DD)',
+        opt_add_time: 'Add time (HH-MM)',
+        opt_overwrite: 'Overwrite if exists',
+        modal_filename_preview: 'Filename preview',
+        modal_est_size: 'Estimated size',
+        btn_cancel: 'Cancel',
+        // JS dynamic
+        toast_unknown_format: 'Unknown format',
+        status_loaded: 'Loaded: ',
+        toast_reset: 'Parameters reset',
+        toast_no_folder: 'Folder selection not available in this version',
+        label_source_folder: '(source folder)',
+        status_processing: 'Processing image…',
+        toast_export_done: 'Export complete ✓',
+        status_export_done: 'Export complete ✓  →  ',
+        status_video: 'Processing video…',
+        status_error: 'Error: ',
+        toast_export_error: 'Export error',
+        lut_reading: 'Reading…',
+        toast_lut_loaded: 'LUT loaded: ',
+        lut_error: 'Error: ',
+        lut_invalid: 'Invalid LUT or unsupported format',
+        toast_video_done: 'Video export complete ✓',
+        video_analyse: 'Analyzing…',
+        video_extraction: 'Extracting frames…',
+        video_traitement: 'Processing…',
+        video_assemblage: 'Assembling…',
+        video_done: 'Export complete ✓',
+        curve_points: (n) => n + ' point' + (n > 1 ? 's' : ''),
+        sec_hsl: 'HSL Hues',
+        lbl_hue: 'Hue',
+        lbl_hsl_sat: 'Saturation',
+        lbl_lum: 'Luminance',
+        btn_reset_hsl_color: 'Reset color',
+        hsl_red: 'Red', hsl_orange: 'Orange', hsl_yellow: 'Yellow',
+        hsl_green: 'Green', hsl_cyan: 'Cyan', hsl_blue: 'Blue',
+        hsl_purple: 'Purple', hsl_pink: 'Pink',
+        btn_compare: 'Compare',
+        cmp_split: '◀▶ Split',
+        cmp_sbs: '⬜⬜ Side by side',
+        cmp_hold: '👁 Hold to compare',
+        lbl_before: 'Before',
+        lbl_after: 'After',
+        hold_hint: 'Hold click = original  •  release = result',
+      }
+    };
+
+    let currentLang = localStorage.getItem('pikado_lang') || 'fr';
+
+    function t(key, ...args) {
+      const val = (TRANSLATIONS[currentLang] || TRANSLATIONS.fr)[key];
+      if (typeof val === 'function') return val(...args);
+      return val !== undefined ? val : (TRANSLATIONS.fr[key] || key);
+    }
+
+    function applyLang() {
+      // text content
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        el.textContent = t(key);
+      });
+      // placeholders
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+      });
+      // title attributes
+      document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        el.title = t(el.getAttribute('data-i18n-title'));
+      });
+      // LUT select options need special handling
+      const lutLayout = document.getElementById('lutLayout');
+      if (lutLayout) {
+        lutLayout.options[0].textContent = t('lut_standard');
+        lutLayout.options[1].textContent = t('lut_reversed');
+      }
+      // update lang button label with flag emoji
+      const btnLang = document.getElementById('btnLang');
+      if (btnLang) btnLang.textContent = currentLang === 'fr' ? '🇫🇷' : '🇺🇸';
+      // update html lang attr
+      document.documentElement.lang = currentLang;
+    }
+    function $(id) { return document.getElementById(id); }
+    function setStatus(text, active = false) {
+      $('status').textContent = text;
+      $('status').classList.toggle('active', active);
+    }
+    let toastTimer;
+    function showToast(msg, duration = 2000) {
+      const t = $('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), duration);
+    }
+
+    /* ================================================================
+       SPROCKETS
+    ================================================================ */
+    function fillSprockets(el, n) { el.innerHTML = ''; for (let i = 0; i < n; i++) el.appendChild(document.createElement('span')); }
+    fillSprockets($('sprocketTop'), 40);
+    fillSprockets($('sprocketBottom'), 40);
+
+    /* ================================================================
+       ÉTAT GLOBAL
+    ================================================================ */
     let currentFilePath = null;
-    let currentFileType = null; // 'image' | 'video'
-    let originalImageData = null; // pixels "propres" de l'image chargée, jamais modifiés directement
-    let origWidth = 0;
-    let origHeight = 0;
-    let zoomScale = 1;
-    const MIN_ZOOM = 0.5;
-    const MAX_ZOOM = 5;
-    let isPanning = false;
-    let startX = 0, startY = 0;
-    let translateX = 0, translateY = 0;
+    let currentFileType = null;
+    let originalImageData = null;
+    let origWidth = 0, origHeight = 0;
     let currentLutData = null;
 
-    const dropzone = document.getElementById('dropzone');
-    const previewWrap = document.getElementById('previewWrap');
-    const previewCanvas = document.getElementById('previewCanvas');
-    const previewVideo = document.getElementById('previewVideo');
-    const changeFileBtn = document.getElementById('changeFileBtn');
-    const exportBtn = document.getElementById('exportBtn');
-    const statusEl = document.getElementById('status');
-    const fillEl = document.getElementById('filmstripFill');
-    const lutIntensity = document.getElementById('lutIntensity');
-    const lutIntensityVal = document.getElementById('lutIntensityVal')
+    /* zoom / pan */
+    let zoom = 1;
+    let panX = 0, panY = 0;
+    let isPanning = false;
+    let panSX = 0, panSY = 0, panOX = 0, panOY = 0;
+    const MIN_ZOOM = 0.1, MAX_ZOOM = 20;
+    let zoomHintTimer;
 
-    const IMAGE_EXT = ['.jpg', '.jpeg', '.png', '.webp', '.tiff'];
+    const stage = $('stage');
+    const dropzone = $('dropzone');
+    const previewWrap = $('previewWrap');
+    const previewCanvas = $('previewCanvas');
+    const previewVideo = $('previewVideo');
+    const exportBtn = $('exportBtn');
+    const fillEl = $('filmstripFill');
+    const zoomIndicator = $('zoomIndicator');
+
+    const IMAGE_EXT = ['.jpg', '.jpeg', '.png', '.webp', '.tiff', '.avif', '.heif'];
     const VIDEO_EXT = ['.mp4', '.mov', '.mkv', '.avi', '.webm'];
-
-    function guessType(filePath) {
-      const ext = filePath.slice(filePath.lastIndexOf('.')).toLowerCase();
+    function guessType(p) {
+      const ext = p.slice(p.lastIndexOf('.')).toLowerCase();
       if (IMAGE_EXT.includes(ext)) return 'image';
       if (VIDEO_EXT.includes(ext)) return 'video';
       return null;
     }
 
-    function setStatus(text, active = false) {
-      statusEl.textContent = text;
-      statusEl.classList.toggle('active', active);
+    /* ================================================================
+       ZOOM / PAN — approche correcte :
+       Le canvas est centré via CSS (top:50%;left:50%).
+       applyTransform applique translate(-50%,-50%) PUIS les offsets pan
+       PUIS le scale — tout avec transform-origin:center center.
+       Le zoom vers le curseur ajuste panX/panY pour que le point
+       sous la souris reste fixe (calcul en coordonnées de la stage).
+    ================================================================ */
+    function applyTransform(animated = false) {
+      const tf = `translate(calc(-50% + ${panX}px), calc(-50% + ${panY}px)) scale(${zoom})`;
+      previewCanvas.style.transition = animated ? 'transform .18s ease' : 'none';
+      previewCanvas.style.transform = tf;
+
+      if (compareMode === 'split') {
+        // compareCanvas suit exactement le même transform que previewCanvas
+        compareCanvas.style.transition = previewCanvas.style.transition;
+        compareCanvas.style.transform = tf;
+        // Les clip-path % sont relatifs à l'élément lui-même → pas besoin de recalculer
+        // Il faut juste re-sync la position CSS du handle (qui dépend du zoom/pan)
+        syncSplitHandle();
+      } else if (compareMode === 'hold') {
+        holdCanvas.style.transition = previewCanvas.style.transition;
+        holdCanvas.style.transform = tf;
+      }
+    }
+
+    function showZoomIndicator() {
+      zoomIndicator.textContent = Math.round(zoom * 100) + '%';
+      zoomIndicator.classList.add('visible');
+      clearTimeout(zoomHintTimer);
+      zoomHintTimer = setTimeout(() => zoomIndicator.classList.remove('visible'), 1400);
+    }
+
+    function fitToScreen(animated = true) {
+      if (!origWidth || !origHeight) return;
+      const r = stage.getBoundingClientRect();
+      zoom = Math.min(1, (r.width - 40) / origWidth, (r.height - 40) / origHeight);
+      panX = 0; panY = 0;
+      applyTransform(animated);
+      showZoomIndicator();
+    }
+
+    function zoomTo100(animated = true) {
+      zoom = 1; panX = 0; panY = 0;
+      applyTransform(animated);
+      showZoomIndicator();
+    }
+
+    /* zoom vers le curseur souris */
+    previewWrap.addEventListener('wheel', (e) => {
+      if (currentFileType !== 'image') return;
+      // En mode SBS, la roue est capturée par sbsWrap → on laisse passer uniquement les autres modes
+      if (compareMode === 'sbs') return;
+      e.preventDefault();
+
+      const stageRect = stage.getBoundingClientRect();
+      const mx = e.clientX - (stageRect.left + stageRect.width / 2);
+      const my = e.clientY - (stageRect.top + stageRect.height / 2);
+
+      const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+      const newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom * factor));
+
+      panX = mx - (mx - panX) * (newZoom / zoom);
+      panY = my - (my - panY) * (newZoom / zoom);
+      zoom = newZoom;
+
+      applyTransform();
+      showZoomIndicator();
+    }, { passive: false });
+
+    /* pan : clic gauche — désactivé en mode hold (géré par stage) et sbs */
+    previewWrap.addEventListener('mousedown', (e) => {
+      if (currentFileType !== 'image' || e.button !== 0) return;
+      if (compareMode === 'hold' || compareMode === 'sbs') return;
+      isPanning = true;
+      previewCanvas.classList.add('grabbing');
+      panSX = e.clientX; panSY = e.clientY;
+      panOX = panX; panOY = panY;
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!isPanning) return;
+      panX = panOX + (e.clientX - panSX);
+      panY = panOY + (e.clientY - panSY);
+      applyTransform();
+    });
+    window.addEventListener('mouseup', (e) => {
+      if (e.button === 0) { isPanning = false; previewCanvas.classList.remove('grabbing'); }
+    });
+
+    /* double-clic sur l'aperçu → fit */
+    previewWrap.addEventListener('dblclick', () => fitToScreen());
+
+    /* ================================================================
+       CHARGEMENT FICHIER
+    ================================================================ */
+    async function pickFile() {
+      const fp = await window.filmLook.selectFile();
+      if (fp) loadFile(fp);
     }
 
     function loadFile(filePath) {
       const type = guessType(filePath);
-      if (!type) {
-        setStatus('Format non reconnu — choisis une image ou une vidéo');
-        return;
-      }
+      if (!type) { showToast(t('toast_unknown_format')); return; }
+      // Quitter le mode comparaison si actif
+      if (compareMode) { previewCanvas.style.clipPath = ''; exitCompare(); }
       currentFilePath = filePath;
       currentFileType = type;
-
       dropzone.style.display = 'none';
       previewWrap.classList.add('active');
+
       const fileUrl = 'file://' + filePath.replace(/\\/g, '/');
+      const name = filePath.split(/[\\/]/).pop();
 
       if (type === 'image') {
         previewVideo.style.display = 'none';
+        previewCanvas.style.display = 'block';
 
         const img = new Image();
         img.onload = () => {
-          // on plafonne la résolution de preview pour que le recalcul reste
-          // instantané pendant qu'on bouge les sliders ; l'export final, lui,
-          // repart toujours du fichier original en pleine résolution.
-          const maxSide = 1000;
-          const scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
-          const w = Math.round(img.naturalWidth * scale);
-          const h = Math.round(img.naturalHeight * scale);
-          // Réinitialiser le zoom et le déplacement
-          zoomScale = 1;
-          translateX = 0;
-          translateY = 0;
-          isPanning = false;
-          updateCanvasTransform();
-
-          // Gestion du zoom à la molette
-          previewCanvas.removeEventListener('wheel', handleWheelZoom);
-          previewCanvas.addEventListener('wheel', handleWheelZoom, { passive: false });
-
-          // Gestion du déplacement (clic molette)
-          previewCanvas.removeEventListener('mousedown', startPan);
-          previewCanvas.addEventListener('mousedown', startPan);
-
-          window.removeEventListener('mousemove', movePan);
-          window.addEventListener('mousemove', movePan);
-
-          window.removeEventListener('mouseup', stopPan);
-          window.addEventListener('mouseup', stopPan);
-
-          previewCanvas.width = w;
-          previewCanvas.height = h;
-          previewCanvas.style.display = 'block';
-
+          const maxSide = 1200;
+          const s = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+          origWidth = Math.round(img.naturalWidth * s);
+          origHeight = Math.round(img.naturalHeight * s);
+          previewCanvas.width = origWidth;
+          previewCanvas.height = origHeight;
           const ctx = previewCanvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, w, h);
-
-          originalImageData = new Uint8ClampedArray(ctx.getImageData(0, 0, w, h).data);
-          origWidth = w;
-          origHeight = h;
-
-          drawHisto(ctx.getImageData(0, 0, w, h));
-
+          ctx.drawImage(img, 0, 0, origWidth, origHeight);
+          originalImageData = new Uint8ClampedArray(ctx.getImageData(0, 0, origWidth, origHeight).data);
+          drawHisto(ctx.getImageData(0, 0, origWidth, origHeight));
+          fitToScreen(false);
           renderPreview();
+          enableImageControls(true);
         };
         img.src = fileUrl;
-        zoomScale = 1;
-        previewCanvas.style.transform = `scale(${zoomScale})`;
-
-        // Gestion du zoom à la molette
-        previewCanvas.removeEventListener('wheel', handleWheelZoom);
-        previewCanvas.addEventListener('wheel', handleWheelZoom, { passive: false });
       } else {
         previewCanvas.style.display = 'none';
         previewVideo.style.display = 'block';
         previewVideo.src = fileUrl;
+        enableImageControls(false);
       }
 
       exportBtn.disabled = false;
-      setStatus(`Chargé : ${filePath.split(/[\\/]/).pop()}`);
+      $('btnFit').disabled = false;
+      $('btnZoom100').disabled = false;
+      $('btnReset').disabled = false;
+      $('btnCompare').disabled = (type !== 'image');
+      setStatus(t('status_loaded') + name);
     }
 
-    // ---- aperçu live (image uniquement pour l'instant) ----
+    function enableImageControls(yes) {
+      /* rien à griser pour l'instant mais hook utile */
+    }
+
+    dropzone.addEventListener('click', pickFile);
+    $('btnOpen').addEventListener('click', pickFile);
+    $('btnChangefile').addEventListener('click', pickFile);
+
+    ['dragover', 'dragleave', 'drop'].forEach(ev => dropzone.addEventListener(ev, e => e.preventDefault()));
+    dropzone.addEventListener('dragover', () => dropzone.classList.add('drag-over'));
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+    dropzone.addEventListener('drop', (e) => {
+      dropzone.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file) loadFile(window.filmLook.getPathForFile(file));
+    });
+
+    /* ================================================================
+       BOUTONS HEADER
+    ================================================================ */
+    $('btnFit').addEventListener('click', () => fitToScreen());
+    $('btnZoom100').addEventListener('click', () => zoomTo100());
+    $('btnReset').addEventListener('click', resetAllParams);
+
+    /* ================================================================
+       APERÇU LIVE
+    ================================================================ */
     function renderPreview() {
       if (currentFileType !== 'image' || !originalImageData) return;
       const ctx = previewCanvas.getContext('2d');
       const options = buildOptions();
-
-      // 1. Applique tes effets de base (exposition, grain, etc.)
       let result = window.filmLook.applyEffects(originalImageData, origWidth, origHeight, options);
 
-      // Dans la fonction renderPreview()
-      const lutEnabled = document.getElementById('lutEnabled').checked;
-      if (lutEnabled && currentLutData) {
-        const intensity = parseFloat(document.getElementById('lutIntensity').value) / 100;
-        const layout = document.getElementById('lutLayout').value;
-
+      /* LUT */
+      if ($('lutEnabled').checked && currentLutData) {
+        const intensity = parseFloat($('lutIntensity').value) / 100;
+        const layout = $('lutLayout').value;
         for (let i = 0; i < result.length; i += 4) {
-          const origR = result[i];
-          const origG = result[i + 1];
-          const origB = result[i + 2];
-
-          // Calcul du pixel transformé par la LUT
-          const lutRgb = applyLutToPixel(origR, origG, origB, currentLutData, layout);
-
-          // Mélange (Mix) entre l'original et la LUT selon l'intensité désirée
-          result[i] = origR + (lutRgb.r - origR) * intensity;
-          result[i + 1] = origG + (lutRgb.g - origG) * intensity;
-          result[i + 2] = origB + (lutRgb.b - origB) * intensity;
+          const lp = applyLutToPixel(result[i], result[i + 1], result[i + 2], currentLutData, layout);
+          result[i] = result[i] + (lp.r - result[i]) * intensity;
+          result[i + 1] = result[i + 1] + (lp.g - result[i + 1]) * intensity;
+          result[i + 2] = result[i + 2] + (lp.b - result[i + 2]) * intensity;
         }
       }
 
-      // 3. Applique les courbes (RVB global puis canaux R, G, B independants)
-      if (document.getElementById('curvesEnabled').checked) {
-        const lutRGB = curveData['rgb'].lut;
-        const lutR = curveData['r'].lut;
-        const lutG = curveData['g'].lut;
-        const lutB = curveData['b'].lut;
+      /* Courbes */
+      if ($('curvesEnabled').checked) {
+        const lRGB = curveData['rgb'].lut, lR = curveData['r'].lut, lG = curveData['g'].lut, lB = curveData['b'].lut;
         for (let i = 0; i < result.length; i += 4) {
-          result[i] = lutR[lutRGB[result[i]]];
-          result[i + 1] = lutG[lutRGB[result[i + 1]]];
-          result[i + 2] = lutB[lutRGB[result[i + 2]]];
+          result[i] = lR[lRGB[result[i]]];
+          result[i + 1] = lG[lRGB[result[i + 1]]];
+          result[i + 2] = lB[lRGB[result[i + 2]]];
         }
       }
 
-      const imageData = new ImageData(new Uint8ClampedArray(result), origWidth, origHeight);
-      ctx.putImageData(imageData, 0, 0);
-    }
-
-    function updateCanvasTransform() {
-      // IMPORTANT : On applique d'abord la translation, puis le scale pour un comportement naturel
-      previewCanvas.style.transform = `translate(${translateX}px, ${translateY}px) scale(${zoomScale})`;
-    }
-
-    function handleWheelZoom(e) {
-      e.preventDefault(); // Empêche la page entière de scroller
-
-      // Détermine la direction du zoom (e.deltaY < 0 signifie qu'on roule vers le haut = zoom)
-      const zoomIntensity = 0.1;
-      if (e.deltaY < 0) {
-        zoomScale += zoomIntensity;
-      } else {
-        zoomScale -= zoomIntensity;
+      /* HSL Teintes */
+      if ($('hslEnabled').checked) {
+        result = applyHslFilter(result);
       }
 
-      // On limite le zoom entre les bornes min et max
-      zoomScale = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoomScale));
+      ctx.putImageData(new ImageData(new Uint8ClampedArray(result), origWidth, origHeight), 0, 0);
 
-      // Applique le zoom en CSS sur le canvas
-      updateCanvasTransform();
-    }
-
-    function startPan(e) {
-      // e.button === 1 correspond au clic de la molette (clic du milieu)
-      if (e.button !== 1) return;
-
-      e.preventDefault(); // Empêche le curseur de défilement auto d'un navigateur classique
-      isPanning = true;
-
-      // On enregistre la position de départ de la souris moins le décalage déjà existant
-      startX = e.clientX - translateX;
-      startY = e.clientY - translateY;
-
-      previewCanvas.style.cursor = 'grabbing';
-    }
-
-    function movePan(e) {
-      if (!isPanning) return;
-
-      // On calcule le nouveau décalage
-      translateX = e.clientX - startX;
-      translateY = e.clientY - startY;
-
-      updateCanvasTransform();
-    }
-
-    function stopPan(e) {
-      if (e.button === 1 && isPanning) {
-        isPanning = false;
-        previewCanvas.style.cursor = 'default';
-      }
+      // Rafraîchir l'overlay de comparaison si actif
+      if (compareMode) renderCompare();
     }
 
     let rafPending = false;
@@ -1130,713 +2044,565 @@
       requestAnimationFrame(() => { rafPending = false; renderPreview(); });
     }
 
-    // ---- ouverture via la boîte de dialogue native (la méthode la plus fiable) ----
-    async function pickFile() {
-      const filePath = await window.filmLook.selectFile();
-      if (filePath) loadFile(filePath);
+    /* ================================================================
+       BUILD OPTIONS
+    ================================================================ */
+    function hexToRgb(hex) { const v = parseInt(hex.slice(1), 16); return { r: (v >> 16) & 255, g: (v >> 8) & 255, b: v & 255 }; }
+
+    function buildOptions() {
+      return {
+        exposure: { enabled: $('exposureEnabled').checked, stops: Number($('exposureStops').value) },
+        levels: { enabled: $('levelsEnabled').checked, inputBlack: Number($('inputBlack').value), inputWhite: Number($('inputWhite').value), gamma: Number($('gamma').value) },
+        contrast: { enabled: $('contrastEnabled').checked, amount: Number($('contrastAmount').value) },
+        saturation: { enabled: $('saturationEnabled').checked, amount: Number($('saturationAmount').value) },
+        sharpen: { enabled: $('sharpenEnabled').checked, radius: Number($('sharpenRadius').value), sigma: Number($('sharpenSigma').value), amount: Number($('sharpenAmount').value), threshold: Number($('sharpenThreshold').value) },
+        grain: { enabled: $('grainEnabled').checked, intensity: Number($('grainIntensity').value), size: Number($('grainSize').value), monochrome: $('grainMono').checked },
+        curves: { enabled: $('curvesEnabled').checked, rgb: curveData['rgb'].lut, r: curveData['r'].lut, g: curveData['g'].lut, b: curveData['b'].lut },
+      };
     }
-    dropzone.addEventListener('click', pickFile);
-    changeFileBtn.addEventListener('click', pickFile);
 
-    // ---- glisser-déposer ----
-    ['dragover', 'dragleave', 'drop'].forEach(evt => {
-      dropzone.addEventListener(evt, (e) => e.preventDefault());
-    });
-    dropzone.addEventListener('dragover', () => dropzone.classList.add('drag-over'));
-    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
-    dropzone.addEventListener('drop', (e) => {
-      dropzone.classList.remove('drag-over');
-      const file = e.dataTransfer.files[0];
-      if (!file) return;
-      // Electron 32+ : le chemin réel d'un File ne passe plus par .path,
-      // il faut webUtils.getPathForFile (exposé via preload).
-      const filePath = window.filmLook.getPathForFile(file);
-      if (filePath) loadFile(filePath);
-    });
+    /* ================================================================
+       SYNC LABELS + TOGGLES
+    ================================================================ */
+    function syncSliderLabels() {
+      $('exposureVal').textContent = Number($('exposureStops').value).toFixed(1);
+      $('inputBlackVal').textContent = $('inputBlack').value;
+      $('inputWhiteVal').textContent = $('inputWhite').value;
+      $('gammaVal').textContent = Number($('gamma').value).toFixed(2);
+      $('contrastVal').textContent = $('contrastAmount').value;
+      $('saturationVal').textContent = $('saturationAmount').value;
+      $('sharpenRadiusVal').textContent = $('sharpenRadius').value + 'px';
+      $('sharpenSigmaVal').textContent = Number($('sharpenSigma').value).toFixed(1);
+      $('sharpenAmountVal').textContent = $('sharpenAmount').value + '%';
+      $('sharpenThresholdVal').textContent = $('sharpenThreshold').value;
+      $('grainIntensityVal').textContent = $('grainIntensity').value;
+      $('grainSizeVal').textContent = $('grainSize').value + 'px';
+      $('lutIntensityVal').textContent = $('lutIntensity').value + '%';
+    }
 
-    // ---- recettes prédéfinies ----
-    const RECIPES = {
-      rougeBleu: { target: '#8b0000', replacement: '#000080', hueRange: 15, feather: 8, grainIntensity: 18, grainSize: 1, grainMono: true },
-      oliveBordeaux: { target: '#808000', replacement: '#660015', hueRange: 18, feather: 10, grainIntensity: 22, grainSize: 1, grainMono: true },
-      sepiaDoux: { target: '#ffffff', replacement: '#70421a', hueRange: 40, feather: 20, grainIntensity: 12, grainSize: 1, grainMono: true },
-    };
-
-    document.getElementById('recipeSelect').addEventListener('change', (e) => {
-      const recipe = RECIPES[e.target.value];
-      if (!recipe) return;
-      document.getElementById('targetColor').value = recipe.target;
-      document.getElementById('replacementColor').value = recipe.replacement;
-      document.getElementById('hueRange').value = recipe.hueRange;
-      document.getElementById('feather').value = recipe.feather;
-      document.getElementById('grainIntensity').value = recipe.grainIntensity;
-      document.getElementById('grainSize').value = recipe.grainSize;
-      document.getElementById('grainMono').checked = recipe.grainMono;
-      // une recette active toujours sa teinte ciblée + son grain
-      document.getElementById('colorSwapEnabled').checked = true;
-      document.getElementById('grainEnabled').checked = true;
-      syncToggleStates();
-      syncSliderLabels();
-      schedulePreview();
-    });
-
-    // ---- état visuel "désactivé" des sections + recalcul à chaque bascule ----
     function syncToggleStates() {
-      document.querySelectorAll('.filter-toggle').forEach((toggle) => {
-        toggle.closest('.field-group').classList.toggle('disabled', !toggle.checked);
+      document.querySelectorAll('.filter-toggle').forEach(t => {
+        t.closest('.field-group').classList.toggle('disabled', !t.checked);
       });
     }
 
-    // ---- affichage live des valeurs de sliders ----
-    function syncSliderLabels() {
-      document.getElementById('exposureVal').textContent = Number(document.getElementById('exposureStops').value).toFixed(1);
-      document.getElementById('inputBlackVal').textContent = document.getElementById('inputBlack').value;
-      document.getElementById('inputWhiteVal').textContent = document.getElementById('inputWhite').value;
-      document.getElementById('gammaVal').textContent = Number(document.getElementById('gamma').value).toFixed(2);
-      document.getElementById('contrastVal').textContent = document.getElementById('contrastAmount').value;
-      document.getElementById('saturationVal').textContent = document.getElementById('saturationAmount').value;
-      document.getElementById('sharpenRadiusVal').textContent = document.getElementById('sharpenRadius').value + 'px';
-      document.getElementById('sharpenSigmaVal').textContent = Number(document.getElementById('sharpenSigma').value).toFixed(1);
-      document.getElementById('sharpenAmountVal').textContent = document.getElementById('sharpenAmount').value + '%';
-      document.getElementById('sharpenThresholdVal').textContent = document.getElementById('sharpenThreshold').value;
-      document.getElementById('hueRangeVal').textContent = document.getElementById('hueRange').value + '°';
-      document.getElementById('featherVal').textContent = document.getElementById('feather').value + '°';
-      document.getElementById('grainIntensityVal').textContent = document.getElementById('grainIntensity').value;
-      document.getElementById('grainSizeVal').textContent = document.getElementById('grainSize').value + 'px';
-    }
-
-    // ---- branchement générique : tout contrôle marqué .live-control redessine l'aperçu ----
-    document.querySelectorAll('.live-control').forEach((el) => {
-      const evtName = (el.type === 'range' || el.type === 'color') ? 'input' : 'change';
-      el.addEventListener(evtName, () => {
+    document.querySelectorAll('.live-control').forEach(el => {
+      const ev = (el.type === 'range' || el.type === 'color' || el.tagName === 'SELECT') ? 'input' : 'change';
+      el.addEventListener(ev, () => {
         if (el.classList.contains('filter-toggle')) syncToggleStates();
         syncSliderLabels();
         schedulePreview();
       });
     });
 
-    function hexToRgb(hex) {
-      const v = parseInt(hex.slice(1), 16);
-      return { r: (v >> 16) & 255, g: (v >> 8) & 255, b: v & 255 };
-    }
-
-    // ---- construit l'objet "settings" attendu par applyPipeline (effects.js) ----
-    function buildOptions() {
-      return {
-        exposure: {
-          enabled: document.getElementById('exposureEnabled').checked,
-          stops: Number(document.getElementById('exposureStops').value),
-        },
-        levels: {
-          enabled: document.getElementById('levelsEnabled').checked,
-          inputBlack: Number(document.getElementById('inputBlack').value),
-          inputWhite: Number(document.getElementById('inputWhite').value),
-          gamma: Number(document.getElementById('gamma').value),
-        },
-        contrast: {
-          enabled: document.getElementById('contrastEnabled').checked,
-          amount: Number(document.getElementById('contrastAmount').value),
-        },
-        saturation: {
-          enabled: document.getElementById('saturationEnabled').checked,
-          amount: Number(document.getElementById('saturationAmount').value),
-        },
-        sharpen: {
-          enabled: document.getElementById('sharpenEnabled').checked,
-          radius: Number(document.getElementById('sharpenRadius').value),
-          sigma: Number(document.getElementById('sharpenSigma').value),
-          amount: Number(document.getElementById('sharpenAmount').value),
-          threshold: Number(document.getElementById('sharpenThreshold').value),
-        },
-        colorSwaps: {
-          enabled: document.getElementById('colorSwapEnabled').checked,
-          swaps: [{
-            target: hexToRgb(document.getElementById('targetColor').value),
-            replacement: hexToRgb(document.getElementById('replacementColor').value),
-            options: {
-              hueRange: Number(document.getElementById('hueRange').value),
-              feather: Number(document.getElementById('feather').value),
-            },
-          }],
-        },
-        grain: {
-          enabled: document.getElementById('grainEnabled').checked,
-          intensity: Number(document.getElementById('grainIntensity').value),
-          size: Number(document.getElementById('grainSize').value),
-          monochrome: document.getElementById('grainMono').checked,
-        },
-        curves: {
-          enabled: document.getElementById('curvesEnabled').checked,
-          rgb: curveData['rgb'].lut,
-          r: curveData['r'].lut,
-          g: curveData['g'].lut,
-          b: curveData['b'].lut,
-        },
-      };
-    }
-
-    function buildOutputPath(inputPath) {
-      const dot = inputPath.lastIndexOf('.');
-      return inputPath.slice(0, dot) + '-argentique' + inputPath.slice(dot);
-    }
-
-    // ---- progression vidéo (alimente le bandeau pellicule) ----
-    window.filmLook.onVideoProgress((progress) => {
-      const stageLabels = {
-        analyse: 'Analyse de la vidéo…',
-        extraction: 'Extraction des frames…',
-        traitement: progress.total
-          ? `Traitement des frames… ${progress.current}/${progress.total}`
-          : 'Traitement des frames…',
-        assemblage: 'Réassemblage de la vidéo…',
-        'terminé': 'Export terminé ✓',
-      };
-      setStatus(stageLabels[progress.stage] || progress.stage, true);
-      if (progress.stage === 'traitement' && progress.total) {
-        fillEl.style.width = `${(progress.current / progress.total) * 100}%`;
-      } else if (progress.stage === 'terminé') {
-        fillEl.style.width = '100%';
+    /* double-clic sur un slider → valeur par défaut */
+    document.addEventListener('dblclick', e => {
+      if (e.target.tagName === 'INPUT' && e.target.hasAttribute('data-default')) {
+        e.target.value = e.target.getAttribute('data-default');
+        e.target.dispatchEvent(new Event('input', { bubbles: true }));
       }
     });
 
-    // LUT'S
-    function parseCubeLUT(text) {
-      const lines = text.split('\n');
-      let size = 0;
-      const table = [];
-
-      for (let line of lines) {
-        line = line.trim();
-        if (!line || line.startsWith('#')) continue;
-
-        if (line.startsWith('LUT_3D_SIZE')) {
-          size = parseInt(line.split(/\s+/)[1], 10);
-          continue;
-        }
-
-        // Si la ligne contient 3 nombres (R G B)
-        const parts = line.split(/\s+/);
-        if (parts.length === 3) {
-          const r = parseFloat(parts[0]);
-          const g = parseFloat(parts[1]);
-          const b = parseFloat(parts[2]);
-          if (!isNaN(r) && !isNaN(g) && !isNaN(b)) {
-            table.push([r * 255, g * 255, b * 255]);
-          }
-        }
-      }
-
-      if (size === 0 || table.length !== size * size * size) {
-        throw new Error('Format de LUT invalide ou non supporté (seules les LUTs 3D sont gérées).');
-      }
-
-      return { size, table };
+    /* ================================================================
+       RÉINITIALISER TOUS LES PARAMÈTRES
+    ================================================================ */
+    function resetAllParams() {
+      /* remet chaque slider à sa valeur data-default */
+      document.querySelectorAll('input[data-default]').forEach(el => {
+        el.value = el.getAttribute('data-default');
+      });
+      /* décoche tous les filtres */
+      document.querySelectorAll('.filter-toggle').forEach(t => { t.checked = false; });
+      /* reset grain mono */
+      $('grainMono').checked = true;
+      /* reset HSL teintes */
+      HSL_COLORS.forEach(c => {
+        hslData[c.key] = { hue: 0, sat: 0, lum: 0 };
+        document.querySelector(`.hsl-swatch[data-color="${c.key}"]`)?.classList.remove('modified');
+      });
+      selectHslColor(activeHslColor);
+      /* reset courbes */
+      CURVE_CHANNELS.forEach(ch => {
+        curveData[ch].points = [{ x: 0, y: 0 }, { x: 255, y: 255 }];
+        buildLUT(ch);
+      });
+      drawCurve();
+      syncToggleStates();
+      syncSliderLabels();
+      schedulePreview();
+      showToast(t('toast_reset'));
     }
 
-    function applyLutToPixel(r, g, b, lut, layout) {
-      const size = lut.size;
-      const m = size - 1;
+    /* ================================================================
+       ACCORDÉON
+    ================================================================ */
+    document.querySelectorAll('.section-header').forEach(header => {
+      header.addEventListener('click', e => {
+        if (e.target.classList.contains('filter-toggle')) return;
+        header.closest('.field-group').classList.toggle('collapsed');
+      });
+    });
 
-      // On mappe les valeurs 0-255 sur les indices de la grille de la LUT
-      const x = (r / 255) * m;
-      const y = (g / 255) * m;
-      const z = (b / 255) * m;
+    /* ================================================================
+       EXPORT
+    ================================================================ */
+    /* ================================================================
+       MODALE D'EXPORT
+    ================================================================ */
+    const exportModal = $('exportModal');
+    const modalClose = $('modalClose');
+    const modalCancel = $('modalCancelBtn');
+    const modalConfirm = $('modalConfirmBtn');
+    const filenamePreview = $('filenamePreview');
 
-      // Calcul de l'index 1D dans le tableau .cube
-      const getIndex = (cx, cy, cz) => {
-        const clampX = Math.min(m, Math.max(0, cx));
-        const clampY = Math.min(m, Math.max(0, cy));
-        const clampZ = Math.min(m, Math.max(0, cz));
+    function openExportModal() {
+      if (!currentFilePath) return;
+      // pré-remplir le nom de base depuis le fichier courant
+      const srcName = currentFilePath.split(/[\\/]/).pop();
+      const srcBase = srcName.slice(0, srcName.lastIndexOf('.'));
+      $('exportBasename').value = $('exportBasename').value || srcBase;
+      $('exportSuffix').value = $('exportSuffix').value || '-argentique';
+      updateFilenamePreview();
+      updateEstimatedSize();
+      exportModal.classList.add('open');
+    }
+    function closeExportModal() { exportModal.classList.remove('open'); }
 
-        if (layout === 'BGR') {
-          // Layout inversé : B grandit en premier, puis G, puis R
-          return clampZ + clampY * size + clampX * size * size;
-        } else {
-          // Layout Standard (par défaut dans Resolve) : R grandit en premier, puis G, puis B
-          return clampX + clampY * size + clampZ * size * size;
-        }
-      };
+    modalClose.addEventListener('click', closeExportModal);
+    modalCancel.addEventListener('click', closeExportModal);
+    exportModal.addEventListener('click', e => { if (e.target === exportModal) closeExportModal(); });
 
-      // On récupère la couleur la plus proche dans la LUT
-      const lutColor = lut.table[getIndex(Math.round(x), Math.round(y), Math.round(z))];
-
-      return lutColor ? { r: lutColor[0], g: lutColor[1], b: lutColor[2] } : { r, g, b };
+    /* aperçu du nom en temps réel */
+    function updateFilenamePreview() {
+      const fmt = document.querySelector('input[name="exportFormat"]:checked')?.value || 'jpg';
+      const prefix = $('exportPrefix').value;
+      const base = $('exportBasename').value || 'export';
+      const suffix = $('exportSuffix').value;
+      const now = new Date();
+      const date = $('exportAddDate').checked
+        ? `-${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+        : '';
+      const time = $('exportAddTime').checked
+        ? `-${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}`
+        : '';
+      const dest = document.querySelector('input[name="exportDest"]:checked')?.value;
+      const folder = dest === 'custom' ? ($('customDestPath').value || '…') : t('label_source_folder');
+      filenamePreview.textContent = `${folder}/${prefix}${base}${suffix}${date}${time}.${fmt}`;
     }
 
-    const lutInput = document.getElementById('lutInput');
-    const lutSelectBtn = document.getElementById('lutSelectBtn');
-    const lutNameEl = document.getElementById('lutName');
+    ['exportPrefix', 'exportBasename', 'exportSuffix'].forEach(id => {
+      let dbt; $(id).addEventListener('input', () => { clearTimeout(dbt); dbt = setTimeout(updateFilenamePreview, 120); });
+    });
+    ['exportAddDate', 'exportAddTime'].forEach(id => $(id).addEventListener('change', updateFilenamePreview));
+    document.querySelectorAll('input[name="exportFormat"]').forEach(r => r.addEventListener('change', () => {
+      const fmt = r.value;
+      $('qualityRow').style.display = ['jpg', 'jpeg', 'webp', 'avif'].includes(fmt) ? 'flex' : 'none';
+      updateFilenamePreview();
+      updateEstimatedSize();
+    }));
+    document.querySelectorAll('input[name="exportDest"]').forEach(r => r.addEventListener('change', () => {
+      $('customDestRow').style.display = r.value === 'custom' && r.checked ? 'flex' : 'none';
+      updateFilenamePreview();
+    }));
 
-    // Relier le clic du bouton stylisé à l'input masqué
-    lutSelectBtn.addEventListener('click', () => lutInput.click());
+    $('exportQuality').addEventListener('input', () => {
+      $('qualityVal').textContent = $('exportQuality').value;
+      updateEstimatedSize();
+    });
 
-    // Quand une LUT est sélectionnée
-    lutInput.addEventListener('change', (e) => {
+    /* ---- Parcourir dossier destination ---- */
+    $('browseDestBtn').addEventListener('click', async () => {
+      // Priorité : API Electron native
+      if (window.filmLook.selectFolder) {
+        const folder = await window.filmLook.selectFolder();
+        if (folder) { $('customDestPath').value = folder; updateFilenamePreview(); }
+        return;
+      }
+      // Fallback : input[webkitdirectory] (Electron supporte file.path)
+      $('destDirPicker').value = '';
+      $('destDirPicker').click();
+    });
+    $('destDirPicker').addEventListener('change', e => {
       const file = e.target.files[0];
       if (!file) return;
-
-      lutNameEl.textContent = "Lecture du fichier...";
-
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        try {
-          currentLutData = parseCubeLUT(evt.target.result);
-          lutNameEl.textContent = file.name;
-          document.getElementById('lutEnabled').checked = true; // Active la case automatiquement
-          syncToggleStates();
-          schedulePreview(); // Rafraîchit l'image
-        } catch (err) {
-          lutNameEl.textContent = "Erreur : " + err.message;
-          currentLutData = null;
-        }
-      };
-      reader.readAsText(file);
+      // Dans Electron, file.path est le chemin absolu complet
+      const fullPath = file.path || file.webkitRelativePath || '';
+      const sep = fullPath.includes('\\') ? '\\' : '/';
+      const folder = fullPath.includes(sep)
+        ? fullPath.substring(0, fullPath.lastIndexOf(sep))
+        : fullPath;
+      if (folder) { $('customDestPath').value = folder; updateFilenamePreview(); }
     });
+    // Permettre la saisie manuelle du chemin aussi
+    $('customDestPath').addEventListener('input', updateFilenamePreview);
 
-    // ---- helper : applique les courbes sur un tableau de pixels ----
-    function applyCurvesToPixels(pixels, opts) {
-      if (!opts.curves || !opts.curves.enabled) return pixels;
-      const lutRGB = opts.curves.rgb;
-      const lutR = opts.curves.r;
-      const lutG = opts.curves.g;
-      const lutB = opts.curves.b;
-      for (let i = 0; i < pixels.length; i += 4) {
-        pixels[i] = lutR[lutRGB[pixels[i]]];
-        pixels[i + 1] = lutG[lutRGB[pixels[i + 1]]];
-        pixels[i + 2] = lutB[lutRGB[pixels[i + 2]]];
+    /* ---- Estimation de la taille du fichier ---- */
+    function estimateFileSize(w, h, fmt, quality) {
+      if (!w || !h) return null;
+      const px = w * h;
+      let bytes;
+      const q = quality / 100;
+      switch (fmt) {
+        case 'jpg':
+        case 'jpeg': bytes = px * (0.04 + q * 0.28); break;   // ~40KB–300KB/MP
+        case 'webp': bytes = px * (0.025 + q * 0.18); break;  // ~20% moins que JPEG
+        case 'avif': bytes = px * (0.015 + q * 0.10); break;  // ~40% moins que JPEG
+        case 'heif': bytes = px * (0.015 + q * 0.10); break;
+        case 'png': bytes = px * 1.1; break;                  // lossless ~1.1 B/px compressé
+        case 'tiff': bytes = px * 3; break;                  // 24-bit non compressé
+        default: bytes = px * 0.3;
       }
-      return pixels;
+      if (bytes < 1024) return bytes.toFixed(0) + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
     }
 
-    // ---- listeners menu natif (Fichier > Ouvrir / Exporter) ----
-    if (window.filmLook.onMenuOpenFile) window.filmLook.onMenuOpenFile(() => pickFile());
-    if (window.filmLook.onMenuExport) window.filmLook.onMenuExport(() => doExport());
+    function updateEstimatedSize() {
+      const fmt = document.querySelector('input[name="exportFormat"]:checked')?.value || 'jpg';
+      const quality = parseInt($('exportQuality').value) || 92;
+      // Dimensions réelles (pas le canvas d'aperçu redimensionné)
+      let w = origWidth, h = origHeight;
+      // Si on a l'image originale, on essaie d'en connaître les vraies dimensions
+      if (currentFilePath && currentFileType === 'image') {
+        // origWidth/origHeight sont celles de l'aperçu (≤1200px) — on utilise le ratio pour estimer
+        // si l'image a été downscalée on n'a pas accès aux dimensions réelles ici, on utilise origWidth/origHeight
+        w = origWidth; h = origHeight;
+      }
+      const size = estimateFileSize(w, h, fmt, quality);
+      $('estSizeVal').textContent = size ? '~ ' + size : '—';
+    }
 
-    // ---- export ----
-    async function doExport() {
-      if (!currentFilePath || exportBtn.disabled) return;
+    modalConfirm.addEventListener('click', () => { closeExportModal(); runExport(); });
+
+    async function runExport() {
       exportBtn.disabled = true;
       fillEl.style.width = '0%';
 
       try {
-        // 1. Dialog natif : l'utilisateur choisit dossier, nom et format
-        const dest = await window.filmLook.selectExportDestination({
-          inputPath: currentFilePath,
-          defaultFormat: 'jpg',
-        });
-        if (!dest) { exportBtn.disabled = false; return; } // annulé
+        const fmt = document.querySelector('input[name="exportFormat"]:checked')?.value || 'jpg';
+        const prefix = $('exportPrefix').value;
+        const base = $('exportBasename').value || currentFilePath.split(/[\\/]/).pop().replace(/\.[^.]+$/, '');
+        const suffix = $('exportSuffix').value;
+        const now = new Date();
+        const date = $('exportAddDate').checked
+          ? `-${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+          : '';
+        const time = $('exportAddTime').checked
+          ? `-${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}`
+          : '';
+        const filename = `${prefix}${base}${suffix}${date}${time}.${fmt}`;
 
-        const { outputPath, format } = dest;
+        let destFolder;
+        const destMode = document.querySelector('input[name="exportDest"]:checked')?.value;
+        if (destMode === 'custom' && $('customDestPath').value.trim()) {
+          destFolder = $('customDestPath').value.trim();
+        } else {
+          // même dossier que la source
+          destFolder = currentFilePath.replace(/[\\/][^\\/]+$/, '');
+        }
+        const outputPath = destFolder + '/' + filename;
         const options = buildOptions();
 
         if (currentFileType === 'image') {
-          setStatus("Traitement de l'image…", true);
+          setStatus(t('status_processing'), true);
           fillEl.style.width = '40%';
 
-          // Charge l'image originale en pleine résolution dans un canvas hors-écran
-          const exportCanvas = document.createElement('canvas');
-          const exportCtx = exportCanvas.getContext('2d');
+          const expCvs = document.createElement('canvas');
+          const expCtx = expCvs.getContext('2d');
           const img = new Image();
           await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = 'file://' + currentFilePath.replace(/\\/g, '/'); });
-          exportCanvas.width = img.naturalWidth;
-          exportCanvas.height = img.naturalHeight;
-          exportCtx.drawImage(img, 0, 0);
-          const rawData = new Uint8ClampedArray(exportCtx.getImageData(0, 0, exportCanvas.width, exportCanvas.height).data);
+          expCvs.width = img.naturalWidth; expCvs.height = img.naturalHeight;
+          expCtx.drawImage(img, 0, 0);
+          let raw = new Uint8ClampedArray(expCtx.getImageData(0, 0, expCvs.width, expCvs.height).data);
 
           fillEl.style.width = '60%';
+          let result = window.filmLook.applyEffects(raw, expCvs.width, expCvs.height, options);
 
-          // Pipeline de base (exposition, niveaux, grain, netteté, etc.)
-          let result = window.filmLook.applyEffects(rawData, exportCanvas.width, exportCanvas.height, options);
-
-          // LUT cinéma si activée
-          const lutEnabled = document.getElementById('lutEnabled').checked;
-          if (lutEnabled && currentLutData) {
-            const intensity = parseFloat(document.getElementById('lutIntensity').value) / 100;
-            const layout = document.getElementById('lutLayout').value;
+          if ($('lutEnabled').checked && currentLutData) {
+            const intensity = parseFloat($('lutIntensity').value) / 100;
+            const layout = $('lutLayout').value;
             for (let i = 0; i < result.length; i += 4) {
-              const lutRgb = applyLutToPixel(result[i], result[i + 1], result[i + 2], currentLutData, layout);
-              result[i] = result[i] + (lutRgb.r - result[i]) * intensity;
-              result[i + 1] = result[i + 1] + (lutRgb.g - result[i + 1]) * intensity;
-              result[i + 2] = result[i + 2] + (lutRgb.b - result[i + 2]) * intensity;
+              const lp = applyLutToPixel(result[i], result[i + 1], result[i + 2], currentLutData, layout);
+              result[i] += (lp.r - result[i]) * intensity;
+              result[i + 1] += (lp.g - result[i + 1]) * intensity;
+              result[i + 2] += (lp.b - result[i + 2]) * intensity;
             }
           }
-
-          // Courbes
           applyCurvesToPixels(result, options);
-
           fillEl.style.width = '80%';
 
-          // Encode et sauvegarde via IPC (sharp côté main process — supporte jpg/png/webp/avif/heif/tiff)
-          const finalImageData = new ImageData(new Uint8ClampedArray(result), exportCanvas.width, exportCanvas.height);
-          exportCtx.putImageData(finalImageData, 0, 0);
+          // ✅ Fix : appliquer les teintes HSL à l'export (identique à renderPreview)
+          if ($('hslEnabled').checked) {
+            result = applyHslFilter(result);
+          }
 
-          try {
-            const mimeMap = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', avif: 'image/avif', heif: 'image/heif', tiff: 'image/tiff' };
-            const mime = mimeMap[format] || 'image/jpeg';
-            const blob = await new Promise(res => exportCanvas.toBlob(res, mime, 0.92));
-            const arrayBuffer = await blob.arrayBuffer();
-            if (window.filmLook.saveFile) {
-              await window.filmLook.saveFile({ outputPath, buffer: Array.from(new Uint8Array(arrayBuffer)) });
-            } else {
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url; a.download = outputPath.split(/[\\/]/).pop(); a.click();
-              URL.revokeObjectURL(url);
-            }
-          } catch (saveErr) {
-            console.warn('saveFile indisponible, fallback processImage', saveErr);
-            await window.filmLook.processImage({ inputPath: currentFilePath, outputPath, format, options });
+          expCtx.putImageData(new ImageData(new Uint8ClampedArray(result), expCvs.width, expCvs.height), 0, 0);
+
+          const mimeMap = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', avif: 'image/avif', heif: 'image/heif', tiff: 'image/tiff' };
+          const quality = parseInt($('exportQuality').value) / 100;
+          const blob = await new Promise(res => expCvs.toBlob(res, mimeMap[fmt] || 'image/jpeg', quality));
+          const buf = Array.from(new Uint8Array(await blob.arrayBuffer()));
+
+          if (window.filmLook.saveFile) {
+            await window.filmLook.saveFile({ outputPath, buffer: buf });
+          } else {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = filename; a.click();
+            URL.revokeObjectURL(url);
           }
 
           fillEl.style.width = '100%';
-          setStatus('Export terminé ✓  →  ' + outputPath, true);
+          setStatus(t('status_export_done') + outputPath, true);
+          showToast(t('toast_export_done'));
         } else {
-          setStatus('Traitement vidéo en cours…', true);
+          setStatus(t('status_video'), true);
           await window.filmLook.processVideo({ inputPath: currentFilePath, outputPath, options });
         }
       } catch (err) {
-        setStatus('Erreur : ' + err.message, true);
+        setStatus(t('status_error') + err.message, true);
+        showToast(t('toast_export_error'));
         console.error(err);
       } finally {
         exportBtn.disabled = false;
       }
     }
 
-    exportBtn.addEventListener('click', doExport);
+    exportBtn.addEventListener('click', openExportModal);
+    if (window.filmLook.onMenuOpenFile) window.filmLook.onMenuOpenFile(() => pickFile());
+    if (window.filmLook.onMenuExport) window.filmLook.onMenuExport(() => openExportModal());
 
-    lutIntensity.addEventListener('input', () => {
-      lutIntensityVal.textContent = `${lutIntensity.value}%`;
+    /* ================================================================
+       PROGRESSION VIDÉO
+    ================================================================ */
+    window.filmLook.onVideoProgress(p => {
+      const labels = { analyse: t('video_analyse'), extraction: t('video_extraction'), traitement: p.total ? `Frames ${p.current}/${p.total}` : t('video_traitement'), assemblage: t('video_assemblage'), 'terminé': t('video_done') };
+      setStatus(labels[p.stage] || p.stage, true);
+      if (p.stage === 'traitement' && p.total) fillEl.style.width = `${p.current / p.total * 100}%`;
+      else if (p.stage === 'terminé') { fillEl.style.width = '100%'; showToast(t('toast_video_done')); }
     });
 
-    // ======================== COURBES ENGINE ========================
-    const CURVE_CHANNELS = ['rgb', 'r', 'g', 'b'];
-    const curveData = {};
-    CURVE_CHANNELS.forEach(ch => {
-      curveData[ch] = { points: [{ x: 0, y: 0 }, { x: 255, y: 255 }], lut: null };
-    });
-
-    let activeCurveChannel = 'rgb';
-    let dragIndex = -1;
-    let hoveredIndex = -1;
-
-    const cvs = document.getElementById('curvesCanvas');
-    const histoCvs = document.getElementById('curvesHistoCanvas');
-    const ctx = cvs.getContext('2d');
-    const histoCtx = histoCvs.getContext('2d');
-    const PAD = 14;
-
-    function curveColor(ch) {
-      return ch === 'r' ? '#e05a45' : ch === 'g' ? '#4f7268' : ch === 'b' ? '#4a7aad' : '#ece3d3';
+    /* ================================================================
+       LUT PARSER + APPLIQUEUR
+    ================================================================ */
+    function parseCubeLUT(text) {
+      const lines = text.split('\n');
+      let size = 0; const table = [];
+      for (let line of lines) {
+        line = line.trim();
+        if (!line || line.startsWith('#')) continue;
+        if (line.startsWith('LUT_3D_SIZE')) { size = parseInt(line.split(/\s+/)[1], 10); continue; }
+        const p = line.split(/\s+/);
+        if (p.length === 3) {
+          const r = parseFloat(p[0]), g = parseFloat(p[1]), b = parseFloat(p[2]);
+          if (!isNaN(r) && !isNaN(g) && !isNaN(b)) table.push([r * 255, g * 255, b * 255]);
+        }
+      }
+      if (size === 0 || table.length !== size * size * size) throw new Error(t('lut_invalid'));
+      return { size, table };
     }
 
-    // -- Spline cubique monotone (Steffen 1990) -- stable, sans oscillations --
+    function applyLutToPixel(r, g, b, lut, layout) {
+      const m = lut.size - 1;
+      const x = (r / 255) * m, y = (g / 255) * m, z = (b / 255) * m;
+      const gi = (cx, cy, cz) => {
+        cx = Math.min(m, Math.max(0, cx)); cy = Math.min(m, Math.max(0, cy)); cz = Math.min(m, Math.max(0, cz));
+        return layout === 'BGR' ? cz + cy * lut.size + cx * lut.size * lut.size : cx + cy * lut.size + cz * lut.size * lut.size;
+      };
+      const c = lut.table[gi(Math.round(x), Math.round(y), Math.round(z))];
+      return c ? { r: c[0], g: c[1], b: c[2] } : { r, g, b };
+    }
+
+    function applyCurvesToPixels(pix, opts) {
+      if (!opts.curves?.enabled) return;
+      const lRGB = opts.curves.rgb, lR = opts.curves.r, lG = opts.curves.g, lB = opts.curves.b;
+      for (let i = 0; i < pix.length; i += 4) {
+        pix[i] = lR[lRGB[pix[i]]]; pix[i + 1] = lG[lRGB[pix[i + 1]]]; pix[i + 2] = lB[lRGB[pix[i + 2]]];
+      }
+    }
+
+    $('lutSelectBtn').addEventListener('click', () => $('lutInput').click());
+    $('lutInput').addEventListener('change', e => {
+      const file = e.target.files[0]; if (!file) return;
+      $('lutName').textContent = t('lut_reading');
+      const reader = new FileReader();
+      reader.onload = ev => {
+        try {
+          currentLutData = parseCubeLUT(ev.target.result);
+          $('lutName').textContent = file.name;
+          $('lutEnabled').checked = true;
+          syncToggleStates(); schedulePreview();
+          showToast(t('toast_lut_loaded') + file.name);
+        } catch (err) { $('lutName').textContent = t('lut_error') + err.message; currentLutData = null; }
+      };
+      reader.readAsText(file);
+    });
+
+    /* ================================================================
+       COURBES ENGINE (spline de Steffen — monotone, sans oscillations)
+    ================================================================ */
+    const CURVE_CHANNELS = ['rgb', 'r', 'g', 'b'];
+    const curveData = {};
+    CURVE_CHANNELS.forEach(ch => { curveData[ch] = { points: [{ x: 0, y: 0 }, { x: 255, y: 255 }], lut: null }; });
+    let activeCurveChannel = 'rgb';
+    let dragIndex = -1, hoveredIndex = -1;
+
+    const cvs = $('curvesCanvas');
+    const histoCvs = $('curvesHistoCanvas');
+    const cctx = cvs.getContext('2d');
+    const hctx = histoCvs.getContext('2d');
+    const PAD = 12;
+
+    function curveColor(ch) { return ch === 'r' ? '#e05a45' : ch === 'g' ? '#4f7268' : ch === 'b' ? '#4a7aad' : '#ece3d3'; }
+
     function buildSpline(pts) {
       const n = pts.length;
-      // Cas triviaux
-      if (n < 2) return (x) => x;
-      if (n === 2) {
-        const dx = pts[1].x - pts[0].x || 1;
-        const dy = pts[1].y - pts[0].y;
-        const slope = dy / dx;
-        return (x) => Math.max(0, Math.min(255, pts[0].y + slope * (x - pts[0].x)));
-      }
-
-      const xs = pts.map(p => p.x);
-      const ys = pts.map(p => p.y);
-
-      // Pentes entre points consecutifs
+      if (n < 2) return x => x;
+      if (n === 2) { const dx = pts[1].x - pts[0].x || 1, dy = pts[1].y - pts[0].y, sl = dy / dx; return x => Math.max(0, Math.min(255, pts[0].y + sl * (x - pts[0].x))); }
+      const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
       const h = [], s = [];
-      for (let i = 0; i < n - 1; i++) {
-        h[i] = xs[i + 1] - xs[i] || 1e-10;
-        s[i] = (ys[i + 1] - ys[i]) / h[i];
-      }
-
-      // Tangentes via methode de Steffen (garantit la monotonie)
-      const m = new Array(n);
-      m[0] = s[0];
-      m[n - 1] = s[n - 2];
+      for (let i = 0; i < n - 1; i++) { h[i] = xs[i + 1] - xs[i] || 1e-10; s[i] = (ys[i + 1] - ys[i]) / h[i]; }
+      const m = new Array(n); m[0] = s[0]; m[n - 1] = s[n - 2];
       for (let i = 1; i < n - 1; i++) {
-        // Signe des pentes voisines
-        if (s[i - 1] * s[i] <= 0) {
-          m[i] = 0; // Extremum local => tangente nulle
-        } else {
-          const p = (s[i - 1] * h[i] + s[i] * h[i - 1]) / (h[i - 1] + h[i]);
-          const limit = 2 * Math.min(Math.abs(s[i - 1]), Math.abs(s[i]));
-          m[i] = Math.abs(p) > limit
-            ? limit * Math.sign(p)
-            : p;
-        }
+        if (s[i - 1] * s[i] <= 0) m[i] = 0;
+        else { const p = (s[i - 1] * h[i] + s[i] * h[i - 1]) / (h[i - 1] + h[i]); m[i] = Math.abs(p) > 2 * Math.min(Math.abs(s[i - 1]), Math.abs(s[i])) ? 2 * Math.min(Math.abs(s[i - 1]), Math.abs(s[i])) * Math.sign(p) : p; }
       }
-
-      // Coefficients des polynomes cubiques par segment
-      const a = ys.slice(0, n - 1);
-      const b = m.slice(0, n - 1);
-      const c = [], d = [];
-      for (let i = 0; i < n - 1; i++) {
-        c[i] = (3 * s[i] - 2 * m[i] - m[i + 1]) / h[i];
-        d[i] = (m[i] + m[i + 1] - 2 * s[i]) / (h[i] * h[i]);
-      }
-
-      return function evalSpline(x) {
-        // Recherche dichotomique du segment
-        let lo = 0, hi = n - 2;
-        while (lo < hi) {
-          const mid = (lo + hi + 1) >> 1;
-          xs[mid] <= x ? lo = mid : hi = mid - 1;
-        }
-        const i = lo;
-        const t = x - xs[i];
-        const val = a[i] + b[i] * t + c[i] * t * t + d[i] * t * t * t;
-        return Math.max(0, Math.min(255, val));
+      const a = ys.slice(0, n - 1), b = m.slice(0, n - 1), c = [], d = [];
+      for (let i = 0; i < n - 1; i++) { c[i] = (3 * s[i] - 2 * m[i] - m[i + 1]) / h[i]; d[i] = (m[i] + m[i + 1] - 2 * s[i]) / (h[i] * h[i]); }
+      return x => {
+        let lo = 0, hi = n - 2; while (lo < hi) { const mid = (lo + hi + 1) >> 1; xs[mid] <= x ? lo = mid : hi = mid - 1; }
+        const i = lo, t = x - xs[i]; return Math.max(0, Math.min(255, a[i] + b[i] * t + c[i] * t * t + d[i] * t * t * t));
       };
     }
 
     function buildLUT(ch) {
-      // Trier + dedoublonner les X (garde le dernier Y en cas de conflit)
       const seen = new Map();
       curveData[ch].points.forEach(p => seen.set(Math.round(p.x), Math.round(p.y)));
-      // Toujours avoir 0 et 255
-      if (!seen.has(0)) seen.set(0, curveData[ch].points[0] ? curveData[ch].points[0].y : 0);
-      if (!seen.has(255)) seen.set(255, curveData[ch].points[curveData[ch].points.length - 1] ? curveData[ch].points[curveData[ch].points.length - 1].y : 255);
+      if (!seen.has(0)) seen.set(0, curveData[ch].points[0]?.y || 0);
+      if (!seen.has(255)) seen.set(255, curveData[ch].points[curveData[ch].points.length - 1]?.y || 255);
       const pts = [...seen.entries()].map(([x, y]) => ({ x, y })).sort((a, b) => a.x - b.x);
-      const spline = buildSpline(pts);
+      const sp = buildSpline(pts);
       const lut = new Uint8Array(256);
-      for (let i = 0; i < 256; i++) lut[i] = Math.max(0, Math.min(255, Math.round(spline(i))));
+      for (let i = 0; i < 256; i++) lut[i] = Math.max(0, Math.min(255, Math.round(sp(i))));
       curveData[ch].lut = lut;
     }
-
     CURVE_CHANNELS.forEach(buildLUT);
 
-    function toCanvas(p) {
-      const W = cvs.width, H = cvs.height;
-      return {
-        cx: PAD + (p.x / 255) * (W - 2 * PAD),
-        cy: PAD + (1 - p.y / 255) * (H - 2 * PAD)
-      };
-    }
-
-    function fromCanvas(cx, cy) {
-      const W = cvs.width, H = cvs.height;
-      return {
-        x: Math.max(0, Math.min(255, Math.round((cx - PAD) / (W - 2 * PAD) * 255))),
-        y: Math.max(0, Math.min(255, Math.round((1 - (cy - PAD) / (H - 2 * PAD)) * 255)))
-      };
-    }
+    function toCanvas(p) { const W = cvs.width, H = cvs.height; return { cx: PAD + (p.x / 255) * (W - 2 * PAD), cy: PAD + (1 - p.y / 255) * (H - 2 * PAD) }; }
+    function fromCanvas(cx, cy) { const W = cvs.width, H = cvs.height; return { x: Math.max(0, Math.min(255, Math.round((cx - PAD) / (W - 2 * PAD) * 255))), y: Math.max(0, Math.min(255, Math.round((1 - (cy - PAD) / (H - 2 * PAD)) * 255))) }; }
 
     function drawCurve() {
       const W = cvs.width, H = cvs.height;
-      ctx.clearRect(0, 0, W, H);
-
-      // Grille
-      ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-      ctx.lineWidth = 0.5;
+      cctx.clearRect(0, 0, W, H);
+      /* grille */
+      cctx.strokeStyle = 'rgba(255,255,255,.05)'; cctx.lineWidth = .5;
       [64, 128, 192].forEach(v => {
-        const x = PAD + (v / 255) * (W - 2 * PAD);
-        const y = PAD + (1 - v / 255) * (H - 2 * PAD);
-        ctx.beginPath(); ctx.moveTo(x, PAD); ctx.lineTo(x, H - PAD); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(PAD, y); ctx.lineTo(W - PAD, y); ctx.stroke();
+        const x = PAD + (v / 255) * (W - 2 * PAD), y = PAD + (1 - v / 255) * (H - 2 * PAD);
+        cctx.beginPath(); cctx.moveTo(x, PAD); cctx.lineTo(x, H - PAD); cctx.stroke();
+        cctx.beginPath(); cctx.moveTo(PAD, y); cctx.lineTo(W - PAD, y); cctx.stroke();
       });
-
-      // Diagonale référence
-      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([4, 4]);
-      ctx.beginPath(); ctx.moveTo(PAD, H - PAD); ctx.lineTo(W - PAD, PAD); ctx.stroke();
-      ctx.setLineDash([]);
-
-      // Courbes des autres canaux en fantôme
+      /* diagonale */
+      cctx.strokeStyle = 'rgba(255,255,255,.08)'; cctx.lineWidth = 1; cctx.setLineDash([4, 4]);
+      cctx.beginPath(); cctx.moveTo(PAD, H - PAD); cctx.lineTo(W - PAD, PAD); cctx.stroke();
+      cctx.setLineDash([]);
+      /* autres canaux en fantôme */
       CURVE_CHANNELS.filter(ch => ch !== activeCurveChannel && ch !== 'rgb').forEach(ch => {
-        const col = curveColor(ch);
-        const lut = curveData[ch].lut;
-        ctx.strokeStyle = col + '55';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        for (let i = 0; i <= 255; i++) {
-          const cx = PAD + (i / 255) * (W - 2 * PAD);
-          const cy = PAD + (1 - lut[i] / 255) * (H - 2 * PAD);
-          i === 0 ? ctx.moveTo(cx, cy) : ctx.lineTo(cx, cy);
-        }
-        ctx.stroke();
+        cctx.strokeStyle = curveColor(ch) + '44'; cctx.lineWidth = 1;
+        cctx.beginPath();
+        for (let i = 0; i <= 255; i++) { const { cx, cy } = toCanvas({ x: i, y: curveData[ch].lut[i] }); i === 0 ? cctx.moveTo(cx, cy) : cctx.lineTo(cx, cy); }
+        cctx.stroke();
       });
-
-      // Courbe active
-      const ch = activeCurveChannel;
-      const lut = curveData[ch].lut;
-      const col = curveColor(ch);
-
-      // Remplissage sous la courbe
-      ctx.beginPath();
-      ctx.moveTo(PAD, H - PAD);
-      for (let i = 0; i <= 255; i++) {
-        const cx = PAD + (i / 255) * (W - 2 * PAD);
-        const cy = PAD + (1 - lut[i] / 255) * (H - 2 * PAD);
-        ctx.lineTo(cx, cy);
-      }
-      ctx.lineTo(W - PAD, H - PAD);
-      ctx.closePath();
-      ctx.fillStyle = col + '18';
-      ctx.fill();
-
-      // Ligne
-      ctx.strokeStyle = col;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      for (let i = 0; i <= 255; i++) {
-        const cx = PAD + (i / 255) * (W - 2 * PAD);
-        const cy = PAD + (1 - lut[i] / 255) * (H - 2 * PAD);
-        i === 0 ? ctx.moveTo(cx, cy) : ctx.lineTo(cx, cy);
-      }
-      ctx.stroke();
-
-      // Points de contrôle
-      const pts = curveData[ch].points;
-      pts.forEach((p, i) => {
+      /* courbe active */
+      const ch = activeCurveChannel, lut = curveData[ch].lut, col = curveColor(ch);
+      cctx.beginPath(); cctx.moveTo(PAD, H - PAD);
+      for (let i = 0; i <= 255; i++) { const { cx, cy } = toCanvas({ x: i, y: lut[i] }); cctx.lineTo(cx, cy); }
+      cctx.lineTo(W - PAD, H - PAD); cctx.closePath();
+      cctx.fillStyle = col + '18'; cctx.fill();
+      cctx.strokeStyle = col; cctx.lineWidth = 1.5;
+      cctx.beginPath();
+      for (let i = 0; i <= 255; i++) { const { cx, cy } = toCanvas({ x: i, y: lut[i] }); i === 0 ? cctx.moveTo(cx, cy) : cctx.lineTo(cx, cy); }
+      cctx.stroke();
+      /* points de contrôle */
+      curveData[ch].points.forEach((p, i) => {
         const { cx, cy } = toCanvas(p);
-        const isDrag = i === dragIndex;
-        const isHov = i === hoveredIndex;
-        ctx.beginPath();
-        ctx.arc(cx, cy, isDrag ? 6 : isHov ? 5 : 4, 0, Math.PI * 2);
-        ctx.fillStyle = isDrag ? col : isHov ? col + 'cc' : '#1c1814';
-        ctx.fill();
-        ctx.strokeStyle = col;
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
+        cctx.beginPath(); cctx.arc(cx, cy, i === dragIndex ? 6 : i === hoveredIndex ? 5 : 4, 0, Math.PI * 2);
+        cctx.fillStyle = i === dragIndex ? col : i === hoveredIndex ? col + 'cc' : '#1c1814'; cctx.fill();
+        cctx.strokeStyle = col; cctx.lineWidth = 1.5; cctx.stroke();
       });
-
-      // Label
-      document.getElementById('curvePtCount').textContent = pts.length + ' point' + (pts.length > 1 ? 's' : '');
+      $('curvePtCount').textContent = t('curve_points', curveData[ch].points.length);
     }
 
     function drawHisto(imageData) {
       if (!imageData) return;
       const W = histoCvs.width, H = histoCvs.height;
-      histoCtx.clearRect(0, 0, W, H);
-      const data = imageData.data;
+      hctx.clearRect(0, 0, W, H);
+      const d = imageData.data;
       const bins = { r: new Float32Array(256), g: new Float32Array(256), b: new Float32Array(256), luma: new Float32Array(256) };
-      for (let i = 0; i < data.length; i += 4) {
-        bins.r[data[i]]++;
-        bins.g[data[i + 1]]++;
-        bins.b[data[i + 2]]++;
-        const l = Math.round(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
-        bins.luma[l]++;
-      }
-      const maxVal = Math.max(...bins.luma, ...bins.r, ...bins.g, ...bins.b);
-      const drawBins = (arr, color) => {
-        histoCtx.fillStyle = color;
-        for (let i = 0; i < 256; i++) {
-          const bH = (arr[i] / maxVal) * (H - 2 * PAD);
-          const bx = PAD + (i / 255) * (W - 2 * PAD);
-          histoCtx.fillRect(bx, H - PAD - bH, Math.max(1, (W - 2 * PAD) / 256), bH);
-        }
-      };
-      drawBins(bins.r, 'rgba(220,90,69,0.6)');
-      drawBins(bins.g, 'rgba(79,114,104,0.6)');
-      drawBins(bins.b, 'rgba(74,122,173,0.6)');
-      drawBins(bins.luma, 'rgba(236,227,211,0.35)');
+      for (let i = 0; i < d.length; i += 4) { bins.r[d[i]]++; bins.g[d[i + 1]]++; bins.b[d[i + 2]]++; bins.luma[Math.round(.299 * d[i] + .587 * d[i + 1] + .114 * d[i + 2])]++; }
+      const maxV = Math.max(...bins.luma, ...bins.r, ...bins.g, ...bins.b);
+      const db = (arr, col) => { hctx.fillStyle = col; for (let i = 0; i < 256; i++) { const bH = (arr[i] / maxV) * (H - 2 * PAD); hctx.fillRect(PAD + (i / 255) * (W - 2 * PAD), H - PAD - bH, Math.max(1, (W - 2 * PAD) / 256), bH); } };
+      db(bins.r, 'rgba(220,90,69,.6)'); db(bins.g, 'rgba(79,114,104,.6)'); db(bins.b, 'rgba(74,122,173,.6)'); db(bins.luma, 'rgba(236,227,211,.3)');
     }
 
-    // Interaction souris
     function getNearestPoint(px, py) {
-      const pts = curveData[activeCurveChannel].points;
-      let best = -1, bestD = Infinity;
-      pts.forEach((p, i) => {
-        const { cx, cy } = toCanvas(p);
-        const d = Math.hypot(cx - px, cy - py);
-        if (d < bestD) { bestD = d; best = i; }
-      });
+      const pts = curveData[activeCurveChannel].points; let best = -1, bestD = Infinity;
+      pts.forEach((p, i) => { const { cx, cy } = toCanvas(p); const d = Math.hypot(cx - px, cy - py); if (d < bestD) { bestD = d; best = i; } });
       return bestD < 12 ? best : -1;
     }
 
-    cvs.addEventListener('mousedown', e => {
+    function getCvsCoords(e) {
       const r = cvs.getBoundingClientRect();
-      const scaleX = cvs.width / r.width, scaleY = cvs.height / r.height;
-      const px = (e.clientX - r.left) * scaleX, py = (e.clientY - r.top) * scaleY;
-      const near = getNearestPoint(px, py);
-      if (near >= 0) {
-        dragIndex = near;
-      } else {
-        const p = fromCanvas(px, py);
-        // Empêche les doublons en X (±2px)
-        const pts = curveData[activeCurveChannel].points;
-        const exists = pts.find(pt => Math.abs(pt.x - p.x) < 3);
-        if (!exists) {
-          pts.push(p);
-          pts.sort((a, b) => a.x - b.x);
+      return { px: (e.clientX - r.left) * cvs.width / r.width, py: (e.clientY - r.top) * cvs.height / r.height };
+    }
+
+    cvs.addEventListener('mousedown', e => {
+      const { px, py } = getCvsCoords(e); const near = getNearestPoint(px, py);
+      if (near >= 0) { dragIndex = near; }
+      else {
+        const p = fromCanvas(px, py); const pts = curveData[activeCurveChannel].points;
+        if (!pts.find(pt => Math.abs(pt.x - p.x) < 3)) {
+          pts.push(p); pts.sort((a, b) => a.x - b.x);
           dragIndex = pts.findIndex(pt => pt.x === p.x && pt.y === p.y);
         } else dragIndex = -1;
       }
-      buildLUT(activeCurveChannel);
-      drawCurve();
-      schedulePreview();
+      buildLUT(activeCurveChannel); drawCurve(); schedulePreview();
     });
-
     cvs.addEventListener('mousemove', e => {
-      const r = cvs.getBoundingClientRect();
-      const scaleX = cvs.width / r.width, scaleY = cvs.height / r.height;
-      const px = (e.clientX - r.left) * scaleX, py = (e.clientY - r.top) * scaleY;
-      const p = fromCanvas(px, py);
-      document.getElementById('curveInVal').textContent = p.x;
-      document.getElementById('curveOutVal').textContent = p.y;
-
+      const { px, py } = getCvsCoords(e); const p = fromCanvas(px, py);
+      $('curveInVal').textContent = p.x; $('curveOutVal').textContent = p.y;
       if (dragIndex >= 0) {
-        const pts = curveData[activeCurveChannel].points;
-        const pt = pts[dragIndex];
-        // Les extrêmes (0 et 255) ne bougent qu'en Y
+        const pts = curveData[activeCurveChannel].points, pt = pts[dragIndex];
         if (dragIndex === 0 || pt.x === 0) pt.x = 0;
         else if (dragIndex === pts.length - 1 || pt.x === 255) pt.x = 255;
         else pt.x = p.x;
-        pt.y = p.y;
-        buildLUT(activeCurveChannel);
-        drawCurve();
-        schedulePreview();
+        pt.y = p.y; buildLUT(activeCurveChannel); drawCurve(); schedulePreview();
       } else {
         hoveredIndex = getNearestPoint(px, py);
         cvs.style.cursor = hoveredIndex >= 0 ? 'grab' : 'crosshair';
         drawCurve();
       }
     });
-
     window.addEventListener('mouseup', () => { dragIndex = -1; });
-
     cvs.addEventListener('dblclick', e => {
-      const r = cvs.getBoundingClientRect();
-      const scaleX = cvs.width / r.width, scaleY = cvs.height / r.height;
-      const px = (e.clientX - r.left) * scaleX, py = (e.clientY - r.top) * scaleY;
-      const near = getNearestPoint(px, py);
+      const { px, py } = getCvsCoords(e); const near = getNearestPoint(px, py);
       const pts = curveData[activeCurveChannel].points;
-      if (near > 0 && near < pts.length - 1) {
-        pts.splice(near, 1);
-        buildLUT(activeCurveChannel);
-        drawCurve();
-        schedulePreview();
-      }
+      if (near > 0 && near < pts.length - 1) { pts.splice(near, 1); buildLUT(activeCurveChannel); drawCurve(); schedulePreview(); }
     });
-
     cvs.addEventListener('mouseleave', () => {
-      hoveredIndex = -1;
-      dragIndex = -1;
-      document.getElementById('curveInVal').textContent = '—';
-      document.getElementById('curveOutVal').textContent = '—';
+      hoveredIndex = -1; dragIndex = -1;
+      $('curveInVal').textContent = '—'; $('curveOutVal').textContent = '—';
       drawCurve();
     });
 
-    // Sélecteur de canaux
     document.querySelectorAll('.curve-ch-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('.curve-ch-btn').forEach(b => {
-          b.style.background = 'var(--panel-raised)';
-          b.style.borderColor = 'var(--border)';
-          b.classList.remove('active');
-        });
-        btn.style.background = 'var(--panel)';
-        btn.style.borderColor = 'var(--ink-dim)';
-        btn.classList.add('active');
-        activeCurveChannel = btn.dataset.ch;
-        drawCurve();
+        document.querySelectorAll('.curve-ch-btn').forEach(b => { b.style.background = 'var(--panel-raised)'; b.style.borderColor = 'var(--border)'; b.classList.remove('active'); });
+        btn.style.background = 'var(--panel)'; btn.style.borderColor = 'var(--ink-dim)'; btn.classList.add('active');
+        activeCurveChannel = btn.dataset.ch; drawCurve();
       });
     });
 
-    // Presets
-    const PRESETS = {
+    const CURVE_PRESETS = {
       linear: [{ x: 0, y: 0 }, { x: 255, y: 255 }],
       contrast: [{ x: 0, y: 0 }, { x: 64, y: 40 }, { x: 128, y: 128 }, { x: 192, y: 215 }, { x: 255, y: 255 }],
       lift: [{ x: 0, y: 28 }, { x: 128, y: 148 }, { x: 255, y: 255 }],
@@ -1844,57 +2610,428 @@
       brighten: [{ x: 0, y: 0 }, { x: 128, y: 165 }, { x: 255, y: 255 }],
       darken: [{ x: 0, y: 0 }, { x: 128, y: 90 }, { x: 255, y: 255 }],
     };
-
     document.querySelectorAll('.curve-preset').forEach(btn => {
       btn.addEventListener('click', () => {
-        curveData[activeCurveChannel].points = JSON.parse(JSON.stringify(PRESETS[btn.dataset.preset]));
-        buildLUT(activeCurveChannel);
-        drawCurve();
-        schedulePreview();
+        curveData[activeCurveChannel].points = JSON.parse(JSON.stringify(CURVE_PRESETS[btn.dataset.preset]));
+        buildLUT(activeCurveChannel); drawCurve(); schedulePreview();
       });
     });
+    $('curvesReset').addEventListener('click', () => {
+      CURVE_CHANNELS.forEach(ch => { curveData[ch].points = [{ x: 0, y: 0 }, { x: 255, y: 255 }]; buildLUT(ch); });
+      drawCurve(); schedulePreview();
+    });
+    $('curvesEnabled').addEventListener('change', () => schedulePreview());
 
-    document.getElementById('curvesReset').addEventListener('click', () => {
-      CURVE_CHANNELS.forEach(ch => {
-        curveData[ch].points = [{ x: 0, y: 0 }, { x: 255, y: 255 }];
-        buildLUT(ch);
-      });
-      drawCurve();
+    /* ================================================================
+       TEINTES HSL
+    ================================================================ */
+    // Définition des 8 couleurs avec leurs plages hue (en degrés 0-360)
+    const HSL_COLORS = [
+      { key: 'red', center: 0, range: 30, bg: 'hsl(0,70%,45%)' },
+      { key: 'orange', center: 30, range: 20, bg: 'hsl(30,80%,50%)' },
+      { key: 'yellow', center: 60, range: 25, bg: 'hsl(55,85%,52%)' },
+      { key: 'green', center: 120, range: 40, bg: 'hsl(120,55%,40%)' },
+      { key: 'cyan', center: 185, range: 30, bg: 'hsl(185,65%,45%)' },
+      { key: 'blue', center: 225, range: 35, bg: 'hsl(225,65%,50%)' },
+      { key: 'purple', center: 280, range: 35, bg: 'hsl(280,55%,45%)' },
+      { key: 'pink', center: 330, range: 30, bg: 'hsl(330,65%,55%)' },
+    ];
+
+    // État HSL : chaque couleur a sa propre valeur hue/sat/lum
+    const hslData = {};
+    HSL_COLORS.forEach(c => { hslData[c.key] = { hue: 0, sat: 0, lum: 0 }; });
+
+    let activeHslColor = 'red';
+
+    // Construire la grille de swatches
+    const hslPicker = document.getElementById('hslColorPicker');
+    HSL_COLORS.forEach(c => {
+      const sw = document.createElement('div');
+      sw.className = 'hsl-swatch' + (c.key === activeHslColor ? ' active' : '');
+      sw.dataset.color = c.key;
+      sw.style.background = c.bg;
+      sw.innerHTML = `<span class="swatch-label" data-i18n="hsl_${c.key}">${c.key}</span><span class="swatch-dot"></span>`;
+      sw.addEventListener('click', () => selectHslColor(c.key));
+      hslPicker.appendChild(sw);
+    });
+
+    function selectHslColor(key) {
+      activeHslColor = key;
+      document.querySelectorAll('.hsl-swatch').forEach(s => s.classList.toggle('active', s.dataset.color === key));
+      // Charger les valeurs de cette couleur dans les sliders
+      const d = hslData[key];
+      $('hslHue').value = d.hue; $('hslHueVal').textContent = d.hue + '°';
+      $('hslSat').value = d.sat; $('hslSatVal').textContent = d.sat;
+      $('hslLum').value = d.lum; $('hslLumVal').textContent = d.lum;
+    }
+
+    // Mise à jour depuis les sliders → stockage dans hslData
+    $('hslHue').addEventListener('input', () => {
+      hslData[activeHslColor].hue = Number($('hslHue').value);
+      $('hslHueVal').textContent = $('hslHue').value + '°';
+      updateSwatchModified(activeHslColor);
+      schedulePreview();
+    });
+    $('hslSat').addEventListener('input', () => {
+      hslData[activeHslColor].sat = Number($('hslSat').value);
+      $('hslSatVal').textContent = $('hslSat').value;
+      updateSwatchModified(activeHslColor);
+      schedulePreview();
+    });
+    $('hslLum').addEventListener('input', () => {
+      hslData[activeHslColor].lum = Number($('hslLum').value);
+      $('hslLumVal').textContent = $('hslLum').value;
+      updateSwatchModified(activeHslColor);
+      schedulePreview();
+    });
+    $('hslEnabled').addEventListener('change', () => schedulePreview());
+
+    function updateSwatchModified(key) {
+      const d = hslData[key];
+      const modified = d.hue !== 0 || d.sat !== 0 || d.lum !== 0;
+      document.querySelector(`.hsl-swatch[data-color="${key}"]`)?.classList.toggle('modified', modified);
+    }
+
+    $('hslResetColor').addEventListener('click', () => {
+      hslData[activeHslColor] = { hue: 0, sat: 0, lum: 0 };
+      $('hslHue').value = 0; $('hslHueVal').textContent = '0°';
+      $('hslSat').value = 0; $('hslSatVal').textContent = '0';
+      $('hslLum').value = 0; $('hslLumVal').textContent = '0';
+      updateSwatchModified(activeHslColor);
       schedulePreview();
     });
 
-    // Synchroniser l'affichage avec l'état du toggle
-    document.getElementById('curvesEnabled').addEventListener('change', () => { schedulePreview(); });
+    // Convertion RGB ↔ HSL
+    function rgbToHsl(r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h, s, l = (max + min) / 2;
+      if (max === min) { h = s = 0; }
+      else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+          case g: h = ((b - r) / d + 2) / 6; break;
+          case b: h = ((r - g) / d + 4) / 6; break;
+        }
+      }
+      return { h: h * 360, s: s * 100, l: l * 100 };
+    }
 
-    drawCurve();
-    // ======================== FIN COURBES ENGINE ========================
+    function hue2rgb(p, q, t) {
+      if (t < 0) t += 1; if (t > 1) t -= 1;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+      return p;
+    }
 
-    // ---- accordéon : clic sur le header pour plier/déplier ----
-    document.querySelectorAll('.section-header').forEach((header) => {
-      header.addEventListener('click', (e) => {
-        // Ne pas fermer si on clique directement sur le toggle (interrupteur)
-        if (e.target.classList.contains('filter-toggle')) return;
-        const group = header.closest('.field-group');
-        if (group) group.classList.toggle('collapsed');
+    function hslToRgb(h, s, l) {
+      h /= 360; s /= 100; l /= 100;
+      if (s === 0) { const v = Math.round(l * 255); return { r: v, g: v, b: v }; }
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      const p = 2 * l - q;
+      return {
+        r: Math.round(hue2rgb(p, q, h + 1 / 3) * 255),
+        g: Math.round(hue2rgb(p, q, h) * 255),
+        b: Math.round(hue2rgb(p, q, h - 1 / 3) * 255),
+      };
+    }
+
+    // Calcul d'un masque doux autour d'une teinte cible
+    function hslMask(pixelH, center, range) {
+      // Différence angulaire la plus courte
+      let diff = Math.abs(pixelH - center);
+      if (diff > 180) diff = 360 - diff;
+      // Masque avec falloff : plein dans range/2, zéro au-delà de range
+      const inner = range * 0.5, outer = range;
+      if (diff <= inner) return 1;
+      if (diff >= outer) return 0;
+      return 1 - (diff - inner) / (outer - inner);
+    }
+
+    // Appliquer le filtre HSL sur les données pixel
+    function applyHslFilter(data) {
+      const result = new Uint8ClampedArray(data);
+      const anyModified = HSL_COLORS.some(c => {
+        const d = hslData[c.key];
+        return d.hue !== 0 || d.sat !== 0 || d.lum !== 0;
       });
+      if (!anyModified) return result;
+
+      for (let i = 0; i < result.length; i += 4) {
+        const hsl = rgbToHsl(result[i], result[i + 1], result[i + 2]);
+        let dH = 0, dS = 0, dL = 0;
+        for (const c of HSL_COLORS) {
+          const w = hslMask(hsl.h, c.center, c.range);
+          if (w === 0) continue;
+          const d = hslData[c.key];
+          dH += d.hue * w;
+          dS += d.sat * w;
+          dL += d.lum * w;
+        }
+        if (dH !== 0 || dS !== 0 || dL !== 0) {
+          const newH = ((hsl.h + dH) % 360 + 360) % 360;
+          const newS = Math.max(0, Math.min(100, hsl.s + dS));
+          const newL = Math.max(0, Math.min(100, hsl.l + dL));
+          const rgb = hslToRgb(newH, newS, newL);
+          result[i] = rgb.r;
+          result[i + 1] = rgb.g;
+          result[i + 2] = rgb.b;
+        }
+      }
+      return result;
+    }
+
+    /* ================================================================
+       RACCOURCIS CLAVIER
+    ================================================================ */
+    document.addEventListener('keydown', e => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if ((e.ctrlKey || e.metaKey) && e.key === 'o') { e.preventDefault(); pickFile(); }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'e') { e.preventDefault(); doExport(); }
+      if (e.key === 'f' || e.key === 'F') fitToScreen();
+      if (e.key === '1') zoomTo100();
+      if (e.key === '+' || e.key === '=') { zoom = Math.min(MAX_ZOOM, zoom * 1.2); applyTransform(true); showZoomIndicator(); }
+      if (e.key === '-') { zoom = Math.max(MIN_ZOOM, zoom / 1.2); applyTransform(true); showZoomIndicator(); }
+      if (e.key === 'r' || e.key === 'R') resetAllParams();
+      if (e.key === 'c' || e.key === 'C') { if (currentFileType === 'image') toggleCompare(); }
     });
 
-    // On écoute le double-clic sur tout le document
-    document.addEventListener('dblclick', (e) => {
-      // Vérifie si l'élément cliqué est bien un input avec un data-default
-      if (e.target.tagName === 'INPUT' && e.target.hasAttribute('data-default')) {
-        const input = e.target;
-        const defaultValue = input.getAttribute('data-default');
+    /* ================================================================
+       OUTIL COMPARAISON AVANT / APRÈS
+    ================================================================ */
+    let compareMode = null; // null | 'split' | 'sbs' | 'hold'
+    let splitX = 0.5;
+    let isDraggingSplit = false;
+    let originalPixels = null;
 
-        // Applique la valeur
-        input.value = defaultValue;
+    const compareBar   = $('compareBar');
+    const compareCanvas= $('compareCanvas');
+    const splitHandle  = $('splitHandle');
+    const sbsWrap      = $('sbsWrap');
+    const sbsBefore    = $('sbsBefore');
+    const sbsAfter     = $('sbsAfter');
+    const holdOverlay  = $('holdOverlay');
+    const holdCanvas   = $('holdCanvas');
 
-        // Déclenche manuellement les événements pour mettre à jour l'interface (labels et prévisualisation)
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        input.dispatchEvent(new Event('change', { bubbles: true }));
+    // Zoom/pan partagé pour le mode SBS
+    let sbsZoom = 1, sbsPanX = 0, sbsPanY = 0;
+    let isSbsPanning = false, sbsPanSX = 0, sbsPanSY = 0, sbsPanOX = 0, sbsPanOY = 0;
+
+    function toggleCompare() {
+      if (compareMode) return; // déjà actif → seule la croix ferme
+      enterCompare('split');
+    }
+
+    function enterCompare(mode) {
+      if (!originalImageData) return;
+      originalPixels = new Uint8ClampedArray(originalImageData);
+      compareMode = mode;
+      compareBar.classList.add('visible');
+      document.querySelectorAll('.cbtn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+      applyCompareMode(mode);
+    }
+
+    function exitCompare() {
+      compareMode = null;
+      originalPixels = null;
+      compareBar.classList.remove('visible');
+      compareCanvas.style.display = 'none';
+      splitHandle.classList.remove('active');
+      sbsWrap.classList.remove('active');
+      holdOverlay.classList.remove('active');
+      previewCanvas.style.display = 'block';
+      previewCanvas.style.clipPath = '';
+      schedulePreview();
+    }
+
+    function applyCompareMode(mode) {
+      compareMode = mode;
+      compareCanvas.style.display = 'none';
+      splitHandle.classList.remove('active');
+      sbsWrap.classList.remove('active');
+      holdOverlay.classList.remove('active');
+      previewCanvas.style.clipPath = '';
+
+      if (mode === 'split') {
+        previewCanvas.style.display = 'block';
+        compareCanvas.style.display = 'block';
+        splitHandle.classList.add('active');
+        syncSplitHandle();
+        renderCompare();
+      } else if (mode === 'sbs') {
+        previewCanvas.style.display = 'none';
+        sbsWrap.classList.add('active');
+        sbsZoom = Math.min(1, (stage.clientWidth / 2 - 20) / origWidth, (stage.clientHeight - 20) / origHeight);
+        sbsPanX = 0; sbsPanY = 0;
+        renderCompare();
+      } else if (mode === 'hold') {
+        previewCanvas.style.display = 'block';
+        holdOverlay.classList.add('active');
+        holdCanvas.width  = origWidth;
+        holdCanvas.height = origHeight;
+        holdCanvas.getContext('2d').putImageData(
+          new ImageData(new Uint8ClampedArray(originalPixels), origWidth, origHeight), 0, 0
+        );
+        // Synchroniser le transform avec previewCanvas
+        holdCanvas.style.transform = previewCanvas.style.transform;
+        holdCanvas.style.opacity = '0';
+      }
+    }
+
+    // ---- Mode SPLIT ----
+    function syncSplitHandle() {
+      if (compareMode !== 'split') return;
+      const stageRect = stage.getBoundingClientRect();
+      const canvasW   = origWidth * zoom;
+      const canvasLeft = stageRect.width / 2 + panX - canvasW / 2;
+      const handleLeft = canvasLeft + splitX * canvasW;
+      splitHandle.style.left   = handleLeft + 'px';
+      splitHandle.style.top    = '0';
+      splitHandle.style.height = stageRect.height + 'px';
+    }
+
+    function renderCompare() {
+      if (!compareMode || !originalImageData) return;
+
+      if (compareMode === 'split') {
+        // Initialiser compareCanvas (image originale) une seule fois
+        if (compareCanvas.width !== origWidth || compareCanvas.height !== origHeight) {
+          compareCanvas.width  = origWidth;
+          compareCanvas.height = origHeight;
+        }
+        compareCanvas.getContext('2d').putImageData(
+          new ImageData(new Uint8ClampedArray(originalPixels), origWidth, origHeight), 0, 0
+        );
+        // Le transform est géré par applyTransform — on met juste à jour les clips
+        const pct = (splitX * 100).toFixed(3);
+        compareCanvas.style.clipPath = `inset(0 ${(100 - splitX * 100).toFixed(3)}% 0 0)`;
+        previewCanvas.style.clipPath = `inset(0 0 0 ${pct}%)`;
+
+      } else if (compareMode === 'sbs') {
+        if (sbsBefore.width !== origWidth || sbsBefore.height !== origHeight) {
+          sbsBefore.width  = origWidth; sbsBefore.height = origHeight;
+          sbsAfter.width   = origWidth; sbsAfter.height  = origHeight;
+        }
+        sbsBefore.getContext('2d').putImageData(
+          new ImageData(new Uint8ClampedArray(originalPixels), origWidth, origHeight), 0, 0
+        );
+        const afterData = previewCanvas.getContext('2d').getImageData(0, 0, origWidth, origHeight);
+        sbsAfter.getContext('2d').putImageData(afterData, 0, 0);
+        applySbsTransform();
+
+      } else if (compareMode === 'hold') {
+        // holdCanvas transform est géré par applyTransform, rien à faire ici
+      }
+    }
+
+    function applySbsTransform() {
+      const tf = `translate(calc(-50% + ${sbsPanX}px), calc(-50% + ${sbsPanY}px)) scale(${sbsZoom})`;
+      [sbsBefore, sbsAfter].forEach(c => {
+        c.style.position = 'absolute';
+        c.style.top = '50%'; c.style.left = '50%';
+        c.style.transformOrigin = 'center center';
+        c.style.transform = tf;
+        c.style.transition = 'none';
+      });
+    }
+
+    splitHandle.addEventListener('mousedown', e => {
+      if (compareMode !== 'split') return;
+      isDraggingSplit = true;
+      e.stopPropagation(); e.preventDefault();
+    });
+
+    // ---- Mode SBS : zoom roue + pan ----
+    sbsWrap.addEventListener('wheel', e => {
+      if (compareMode !== 'sbs') return;
+      e.preventDefault();
+      const rect = sbsWrap.getBoundingClientRect();
+      const mx = e.clientX - (rect.left + rect.width / 2);
+      const my = e.clientY - (rect.top  + rect.height / 2);
+      const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+      const newZ = Math.min(20, Math.max(0.05, sbsZoom * factor));
+      sbsPanX = mx - (mx - sbsPanX) * (newZ / sbsZoom);
+      sbsPanY = my - (my - sbsPanY) * (newZ / sbsZoom);
+      sbsZoom = newZ;
+      applySbsTransform();
+    }, { passive: false });
+
+    sbsWrap.addEventListener('mousedown', e => {
+      if (compareMode !== 'sbs' || e.button !== 0) return;
+      isSbsPanning = true;
+      sbsPanSX = e.clientX; sbsPanSY = e.clientY;
+      sbsPanOX = sbsPanX;   sbsPanOY = sbsPanY;
+      [sbsBefore, sbsAfter].forEach(c => c.classList.add('grabbing'));
+    });
+
+    // ---- Mode HOLD : mousedown/up sur le stage ----
+    let holdActive = false;
+    stage.addEventListener('mousedown', e => {
+      if (compareMode !== 'hold' || e.button !== 0) return;
+      holdActive = true;
+      // Montrer l'original : masquer previewCanvas, afficher holdCanvas
+      previewCanvas.style.opacity = '0';
+      const tf = `translate(calc(-50% + ${panX}px), calc(-50% + ${panY}px)) scale(${zoom})`;
+      holdCanvas.style.transform = tf;
+      holdCanvas.style.opacity = '1';
+    });
+
+    // Global mousemove/mouseup gèrent split drag + sbs pan + hold release
+    window.addEventListener('mousemove', e => {
+      if (isDraggingSplit) {
+        const stageRect = stage.getBoundingClientRect();
+        const canvasW   = origWidth * zoom;
+        const canvasLeft = stageRect.width / 2 + panX - canvasW / 2;
+        splitX = Math.max(0, Math.min(1, (e.clientX - stageRect.left - canvasLeft) / canvasW));
+        syncSplitHandle();
+        renderCompare();
+      } else if (isSbsPanning) {
+        sbsPanX = sbsPanOX + (e.clientX - sbsPanSX);
+        sbsPanY = sbsPanOY + (e.clientY - sbsPanSY);
+        applySbsTransform();
       }
     });
 
+    window.addEventListener('mouseup', e => {
+      isDraggingSplit = false;
+      if (isSbsPanning) {
+        isSbsPanning = false;
+        [sbsBefore, sbsAfter].forEach(c => c.classList.remove('grabbing'));
+      }
+      if (holdActive && compareMode === 'hold') {
+        holdActive = false;
+        previewCanvas.style.opacity = '1';
+        holdCanvas.style.opacity = '0';
+      }
+    });
+
+    // Boutons de la barre
+    document.querySelectorAll('.cbtn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.cbtn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        applyCompareMode(btn.dataset.mode);
+      });
+    });
+    $('compareClose').addEventListener('click', () => exitCompare());
+    $('btnCompare').addEventListener('click', toggleCompare);
+
+    /* ================================================================
+       INIT
+    ================================================================ */
+    // langue
+    applyLang();
+    $('btnLang').addEventListener('click', () => {
+      currentLang = currentLang === 'fr' ? 'en' : 'fr';
+      localStorage.setItem('pikado_lang', currentLang);
+      applyLang();
+      // re-sync the status bar only if no file is loaded
+      if (!currentFilePath) setStatus(t('status_nofile'));
+    });
+    drawCurve();
     syncToggleStates();
     syncSliderLabels();
   </script>
